@@ -8,8 +8,9 @@ let user = "%USER%";
     ../../modules/nixos/disk-config.nix
     ../../modules/shared
     agenix.nixosModules.default
-    inputs.nix-gaming.nixosModules.pipewireLowLatency
-    inputs.nix-gaming.nixosModules.platformOptimizations
+    # Temporarily disabled to fix infinite recursion
+    # inputs.nix-gaming.nixosModules.pipewireLowLatency
+    # inputs.nix-gaming.nixosModules.platformOptimizations
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -454,20 +455,20 @@ let user = "%USER%";
     noto-fonts-emoji
   ];
 
-  # Enable gaming optimizations
-  programs.steam.platformOptimizations.enable = true;
+  # Enable gaming optimizations - temporarily disabled
+  # programs.steam.platformOptimizations.enable = true;
   
-  # Enable low-latency audio for gaming
+  # Enable low-latency audio for gaming - temporarily disabled
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
-    lowLatency = {
-      enable = true;
-      quantum = 64;
-      rate = 48000;
-    };
+    # lowLatency = {
+    #   enable = true;
+    #   quantum = 64;
+    #   rate = 48000;
+    # };
   };
   
   # Make pipewire realtime-capable
@@ -478,13 +479,13 @@ let user = "%USER%";
     gitAndTools.gitFull
     inetutils
     
-    # Gaming packages from nix-gaming
-    inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
-    inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
-    inputs.nix-gaming.packages.${pkgs.system}.wine-mono
-    inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
+    # Gaming packages from nix-gaming - temporarily disabled
+    # inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
+    # inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
+    # inputs.nix-gaming.packages.${pkgs.system}.wine-mono
+    # inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
     # Try winetricks-git first, fallback to standard winetricks
-    (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
+    # (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
     wine-staging  # Keep standard wine
     dxvk          # Keep standard dxvk as fallback
   ];
