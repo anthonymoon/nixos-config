@@ -1,4 +1,4 @@
-{ lib, ... }: {
+_: {
   # Enable ZRAM with half system memory
   zramSwap = {
     enable = true;
@@ -37,6 +37,7 @@
                   "codepage=437"    # DOS codepage
                   "shortname=mixed" # Allow mixed case
                   "errors=remount-ro" # Remount read-only on errors
+                  "noatime"         # Don't update access times (reduces wear)
                 ];
               };
             };
@@ -67,37 +68,6 @@
     };
   };
   
-  # Use partition labels for mounting instead of device paths
-  fileSystems."/boot" = {
-    device = "/dev/disk/by-label/EFI";
-    fsType = "vfat";
-    options = [ 
-      "defaults"
-      "umask=0077"      # Only root can access
-      "fmask=0077"      # File permissions
-      "dmask=0077"      # Directory permissions
-      "iocharset=utf8"  # UTF-8 character encoding
-      "codepage=437"    # DOS codepage
-      "shortname=mixed" # Allow mixed case
-      "errors=remount-ro" # Remount read-only on errors
-      "noatime"         # Don't update access times (reduces wear)
-    ];
-  };
-  
-  fileSystems."/" = lib.mkForce {
-    device = "/dev/disk/by-label/ROOT";
-    fsType = "xfs";
-    options = [ 
-      "defaults"
-      "relatime"        # Default in modern kernels, better than noatime
-      "inode64"         # Use 64-bit inodes for scalability
-      "logbufs=8"       # Increase log buffers for better performance
-      "logbsize=256k"   # Larger log buffer size for heavy modifications
-      "attr2"           # Better extended attribute performance (default in XFS v5)
-      "largeio"         # Allow large I/O operations
-      "swalloc"         # Stripe-width allocation optimization for SSDs
-      # Note: 'discard' is not recommended - use fstrim instead for better performance
-      # Note: 'nobarrier' removed in kernel 4.19+ - barriers handled automatically
-    ];
-  };
+  # Disko handles all filesystem definitions automatically
+  # No manual fileSystems configuration needed - disko creates them from the partition definitions above
 }
