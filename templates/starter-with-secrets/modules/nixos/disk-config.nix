@@ -1,4 +1,4 @@
-_: {
+{ lib, ... }: {
   # Enable ZRAM with half system memory
   zramSwap = {
     enable = true;
@@ -84,7 +84,7 @@ _: {
     ];
   };
   
-  fileSystems."/" = {
+  fileSystems."/" = lib.mkForce {
     device = "/dev/disk/by-label/ROOT";
     fsType = "xfs";
     options = [ 
