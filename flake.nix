@@ -17,16 +17,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.home-manager.follows = "home-manager";
     };
-    disko = {
-      url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
     nix-gaming = {
       url = "github:fufexan/nix-gaming";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
-  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix, nix-gaming } @inputs:
+  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, agenix, nix-gaming } @inputs:
     let
       user = "amoon";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
@@ -85,7 +81,6 @@
           system = "x86_64-linux";
           specialArgs = inputs // { inherit user; };
           modules = [
-            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 sharedModules = [ plasma-manager.homeManagerModules.plasma-manager ]; 
@@ -103,7 +98,6 @@
           inherit system;
           specialArgs = inputs // { inherit user; };
           modules = [
-            disko.nixosModules.disko
             home-manager.nixosModules.home-manager {
               home-manager = {
                 useGlobalPkgs = true;

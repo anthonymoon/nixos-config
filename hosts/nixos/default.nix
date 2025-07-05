@@ -25,21 +25,13 @@ let
 
 in {
   imports = [
-    (modulesPath + "/installer/scan/not-detected.nix")
-
-    # Import shared configuration (tmux, zsh, packages, etc.)
-    # Comment these out initially if you want to start completely minimal
+    ./hardware-configuration.nix
     ../../modules/shared
-
-    # Gaming modules from nix-gaming - temporarily disabled due to recursion
-    # inputs.nix-gaming.nixosModules.pipewireLowLatency
-    # inputs.nix-gaming.nixosModules.platformOptimizations
-
-    # Agenix for secrets management - temporarily disabled
-    # inputs.agenix.nixosModules.default
+    inputs.agenix.nixosModules.default
+    inputs.nix-gaming.nixosModules.pipewireLowLatency
+    inputs.nix-gaming.nixosModules.platformOptimizations
   ];
 
-  # Hardware Configuration (merged from hardware-configuration.nix)
   boot = {
     loader.systemd-boot = {
       enable             = true;
@@ -47,9 +39,7 @@ in {
     };
     loader.efi.canTouchEfiVariables = true;
 
-    initrd.availableKernelModules = [
-      "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "v4l2loopback"
-    ];
+    initrd.availableKernelModules = [ "v4l2loopback" ];
     initrd.kernelModules        = [ "nvidia" ];
     kernelModules               = [ 
       "uinput"          # Input devices
@@ -85,25 +75,7 @@ in {
     zfs.extraPools = [ ];
   };
 
-  # Filesystems
-  fileSystems."/" = {
-    device = "/dev/disk/by-uuid/3b81b6bc-b655-4985-b7dc-108ffa292c63";
-    fsType = "ext4";
-  };
-
-  fileSystems."/boot" = {
-    device  = "/dev/disk/by-uuid/D302-2157";
-    fsType  = "vfat";
-    options = [ "fmask=0077" "dmask=0077" ];
-  };
-
-  swapDevices = [
-    { device = "/dev/disk/by-uuid/d2b78e71-7ea1-472d-864a-64072cfa4978"; }
-  ];
-
-  # Hardware platform
-  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  # Hardware configuration is in hardware-configuration.nix
 
   # NVIDIA drivers
   services.xserver.videoDrivers = [ "nvidia" ];
@@ -139,7 +111,7 @@ in {
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     gamescopeSession.enable = true;
-    # platformOptimizations.enable = true; # Disabled due to recursion
+    platformOptimizations.enable = true;
   };
   programs.gamemode.enable = true;
   
@@ -243,15 +215,11 @@ in {
       alsa.enable      = true;
       alsa.support32Bit = true;
       pulse.enable     = true;
-      # lowLatency = {
-      #   enable = true;
-      #   quantum = 64;
-      #   rate = 48000;
-      # }; # Disabled due to recursion
-      # If you want to use JACK applications, uncomment:
-      # jack.enable = true;
-      # use the example session manager:
-      # media-session.enable = true;
+      lowLatency = {
+        enable = true;
+        quantum = 64;
+        rate = 48000;
+      };
     };
     
     # Make pipewire realtime-capable
@@ -270,9 +238,6 @@ in {
       };
       openFirewall = true;
     };
-
-    # Snapper for filesystem snapshots - disabled for fast boot
-    snapper.enable = false;
 
     # Media services - only on bare metal
     jellyfin = {
@@ -307,7 +272,6 @@ in {
       };
     };
 
-    # Virtualization with libvirtd - disabled, moved to virtualisation section
 
     # *arr stack media management - only on bare metal
     sonarr = {
@@ -398,17 +362,11 @@ in {
       openFirewall = !isVM;
     };
 
-    # System Security Services Daemon - disabled for fast boot
-    sssd.enable = false;
-
     # Jellyseerr media request management - only on bare metal
     jellyseerr = {
       enable = !isVM;
       openFirewall = !isVM;
     };
-
-    # Vaultwarden password manager - disabled for fast boot
-    vaultwarden.enable = false;
 
     # Autofs for automatic mounting - only on bare metal
     autofs = lib.mkIf (!isVM) {
@@ -418,15 +376,6 @@ in {
         /mnt/auto /etc/auto.misc --timeout=60
       '';
     };
-
-    # PostgreSQL database - disabled for fast boot
-    postgresql.enable = false;
-
-    # Security - Fail2ban - disabled for fast boot
-    fail2ban.enable = false;
-
-    # Syncthing for file synchronization - disabled for fast boot
-    syncthing.enable = false;
 
     # NFS Server - only on bare metal
     nfs.server = lib.mkIf (!isVM) {
@@ -441,17 +390,6 @@ in {
       mountdPort = 4002;
     };
 
-    # AdGuard Home - DNS ad blocker - disabled for fast boot
-    adguardhome.enable = false;
-
-    # Smokeping network latency monitoring - disabled for fast boot
-    smokeping.enable = false;
-
-    # ClamAV antivirus - disabled for fast boot
-    clamav = {
-      daemon.enable = false;
-      updater.enable = false;
-    };
   };
 
   # Define a user account. Don't forget to set a password with 'passwd'.
@@ -621,20 +559,17 @@ in {
   environment.systemPackages = with pkgs; [
     vim
     git
-    # Wayland-specific utilities
-    wl-clipboard     # Wayland clipboard utilities (replaces xclip)
-    wayland-utils    # Wayland utilities
-    # inputs.agenix.packages."${pkgs.system}".default  # agenix CLI (temporarily disabled)
-    
-    # Gaming packages from nix-gaming - temporarily disabled due to recursion
-    # inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
-    # inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
-    # inputs.nix-gaming.packages.${pkgs.system}.wine-mono
-    # inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
-    # Try winetricks-git first, fallback to standard winetricks
-    # (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
-    wine-staging  # Keep standard wine
-    dxvk          # Keep standard dxvk as fallback
+    wl-clipboard
+    wayland-utils
+    inputs.agenix.packages."${pkgs.system}".default
+    # Gaming packages from nix-gaming
+    inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
+    inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
+    inputs.nix-gaming.packages.${pkgs.system}.wine-mono
+    inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
+    (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
+    wine-staging
+    dxvk
   ];
 
   # Default applications and environment
