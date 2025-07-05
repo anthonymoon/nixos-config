@@ -25,12 +25,15 @@ in {
     # initrd.kernelModules = [ "amdgpu" ];
     kernelPackages = pkgs.linuxPackages_latest.extend (final: prev: {
       kernel = prev.kernel.override {
+        stdenv = pkgs.stdenvAdapters.withCFlags [ "-march=x86-64-v3" ] pkgs.stdenv;
         structuredExtraConfig = with pkgs.lib.kernel; {
           # Enable sched-ext extensible scheduler framework
           SCHED_CLASS_EXT = yes;
           # Enable BPF scheduler support
           BPF_SYSCALL = yes;
           BPF_JIT = yes;
+          # Optimize for x86-64-v3 (AVX, AVX2, BMI1, BMI2, F16C, FMA, LZCNT, MOVBE, XSAVE)
+          MHASWELL = yes;
         };
       };
     });
