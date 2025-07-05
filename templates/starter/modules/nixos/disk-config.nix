@@ -4,6 +4,12 @@ _: {
     enable = true;
     memoryPercent = 50;
   };
+  
+  # Enable periodic TRIM for SSDs (better than continuous discard)
+  services.fstrim = {
+    enable = true;
+    interval = "weekly"; # Run fstrim once a week
+  };
   # This formats the disk with the ext4 filesystem
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
@@ -43,16 +49,15 @@ _: {
                 mountpoint = "/";
                 mountOptions = [ 
                   "defaults"
-                  "noatime"         # Don't update access times
-                  "nodiratime"      # Don't update directory access times
-                  "discard"         # Enable TRIM for SSDs
-                  "inode64"         # Use 64-bit inodes
-                  "allocsize=64m"   # Preallocate in 64MB chunks for performance
+                  "relatime"        # Default in modern kernels, better than noatime
+                  "inode64"         # Use 64-bit inodes for scalability
                   "logbufs=8"       # Increase log buffers for better performance
-                  "logbsize=256k"   # Larger log buffer size
-                  "attr2"           # Better extended attribute performance
+                  "logbsize=256k"   # Larger log buffer size for heavy modifications
+                  "attr2"           # Better extended attribute performance (default in XFS v5)
                   "largeio"         # Allow large I/O operations
-                  "swalloc"         # Stripe-width allocation for RAID/SSDs
+                  "swalloc"         # Stripe-width allocation optimization for SSDs
+                  # Note: 'discard' is not recommended - use fstrim instead for better performance
+                  # Note: 'nobarrier' removed in kernel 4.19+ - barriers handled automatically
                 ];
               };
             };
@@ -84,16 +89,15 @@ _: {
     fsType = "xfs";
     options = [ 
       "defaults"
-      "noatime"         # Don't update access times
-      "nodiratime"      # Don't update directory access times
-      "discard"         # Enable TRIM for SSDs
-      "inode64"         # Use 64-bit inodes
-      "allocsize=64m"   # Preallocate in 64MB chunks for performance
+      "relatime"        # Default in modern kernels, better than noatime
+      "inode64"         # Use 64-bit inodes for scalability
       "logbufs=8"       # Increase log buffers for better performance
-      "logbsize=256k"   # Larger log buffer size
-      "attr2"           # Better extended attribute performance
+      "logbsize=256k"   # Larger log buffer size for heavy modifications
+      "attr2"           # Better extended attribute performance (default in XFS v5)
       "largeio"         # Allow large I/O operations
-      "swalloc"         # Stripe-width allocation for RAID/SSDs
+      "swalloc"         # Stripe-width allocation optimization for SSDs
+      # Note: 'discard' is not recommended - use fstrim instead for better performance
+      # Note: 'nobarrier' removed in kernel 4.19+ - barriers handled automatically
     ];
   };
 }
