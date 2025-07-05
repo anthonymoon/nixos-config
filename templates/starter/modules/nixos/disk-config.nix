@@ -23,11 +23,11 @@ _: {
             ESP = {
               type = "EF00";
               size = "1G";
-              label = "EFI";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
+                extraArgs = [ "-n" "EFI" ]; # Create filesystem label for FAT32
                 mountOptions = [ 
                   "defaults"
                   "umask=0077"      # Only root can access
@@ -43,11 +43,11 @@ _: {
             };
             root = {
               size = "100%";
-              label = "ROOT";
               content = {
                 type = "filesystem";
                 format = "xfs";
                 mountpoint = "/";
+                extraArgs = [ "-L" "ROOT" ]; # Create filesystem label
                 mountOptions = [ 
                   "defaults"
                   "relatime"        # Default in modern kernels, better than noatime
