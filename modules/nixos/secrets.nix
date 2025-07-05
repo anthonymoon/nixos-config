@@ -1,6 +1,6 @@
 { config, pkgs, agenix, secrets, ... }:
 
-let user = "dustin"; in
+let user = "amoon"; in
 {
   age = {
     identityPaths = [
@@ -19,7 +19,7 @@ let user = "dustin"; in
 
       "syncthing-key" = {
         symlink = true;
-        path = "/home/{$user}/.config/syncthing/key.pem";
+        path = "/home/${user}/.config/syncthing/key.pem";
         file =  "${secrets}/felix-syncthing-key.age";
         mode = "600";
         owner = "${user}";

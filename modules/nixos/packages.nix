@@ -103,7 +103,7 @@ shared-packages ++ [
   # System monitoring
   netdata # Real-time system monitoring
   glances # System monitoring tool
-  btop # Modern system monitor (btop++ in nixpkgs)
+  # btop # Modern system monitor (removed duplicate - defined in shared)
   nvtop # NVIDIA GPU monitoring
   amdgpu-top # AMD GPU monitoring
   iotop # I/O monitoring
@@ -213,7 +213,7 @@ shared-packages ++ [
   # Requested packages
   ansible # Infrastructure automation
   postgresql # PostgreSQL database
-  sqlite # SQLite is already in shared packages
+  # sqlite # SQLite database (removed duplicate - defined in shared)
   libav # Audio/video library
   
   # Essential missing packages

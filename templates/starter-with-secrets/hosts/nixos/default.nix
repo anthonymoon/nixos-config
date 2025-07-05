@@ -44,8 +44,6 @@ let user = "%USER%";
       "mitigations=off"        # Disable CPU vulnerability mitigations for max performance
       "intel_iommu=on"         # Enable Intel IOMMU for virtualization
       "iommu=pt"               # IOMMU passthrough mode for better performance
-      "net.ifnames=0"          # Use traditional network interface names (eth0)
-      "biosdevname=0"          # Disable biosdevname for network interfaces
       "cryptomgr.notests"      # Skip crypto self-tests for faster boot
       "random.trust_cpu=on"    # Trust CPU RNG for faster entropy
       "pci=realloc=on"         # Enable PCI BAR reallocation
