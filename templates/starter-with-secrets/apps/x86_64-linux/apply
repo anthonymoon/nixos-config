@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#\!/usr/bin/env bash
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -9,7 +9,7 @@ NC='\033[0m' # No Color
 export OS=$(uname)
 
 # Primary network interface
-if [[ "$OS" != "Darwin" ]]; then
+if [[ "$OS" \!= "Darwin" ]]; then
   export PRIMARY_IFACE=$(ip -o -4 route show to default | awk '{print $5}')
   echo -e "${GREEN}Found primary network interface $PRIMARY_IFACE${NC}"
 fi
@@ -33,17 +33,8 @@ _prompt() {
 }
 
 ask_for_star() {
-  _print "${YELLOW}Would you like to support my work by starring my GitHub repo? yes/no [yes]: ${NC}"
-  local response
-  read -r response
-  response=${response:-yes} # Set default response to 'yes' if input is empty
-  if [[ "$response" =~ ^[Yy](es)?$ ]] || [[ -z "$response" ]]; then
-    if [[ "$OS" == "Darwin" ]]; then
-      open "https://github.com/dustinlyons/nixos-config"
-    else
-      xdg-open "https://github.com/dustinlyons/nixos-config"
-    fi
-  fi
+  # Skip GitHub repo starring prompt
+  echo "Skipping GitHub repo starring prompt"
 }
 
 ask_for_star
@@ -51,9 +42,10 @@ ask_for_star
 # Fetch username from the system
 export USERNAME=$(whoami)
 
-# If the username is 'nixos' or 'root', ask the user for their username
+# If the username is 'nixos' or 'root', use default username
 if [[ "$USERNAME" == "nixos" ]] || [[ "$USERNAME" == "root" ]]; then
-  _prompt "${YELLOW}You're running as $USERNAME. Please enter your desired username: ${NC}" USERNAME
+  USERNAME="amoon"
+  echo "Using default username: $USERNAME"
 fi
 
 # Check if git is available
@@ -65,26 +57,17 @@ else
   _print "${RED}Git is not available on this system.${NC}"
 fi
 
-# If git email is not found or git is not available, ask the user
+# If git email is not found or git is not available, use default
 if [[ -z "$GIT_EMAIL" ]]; then
-  _prompt "${YELLOW}Please enter your email: ${NC}" GIT_EMAIL
+  GIT_EMAIL="tonymoon@gmail.com"
+  echo "Using default email: $GIT_EMAIL"
 fi
 
-# If git name is not found or git is not available, ask the user
+# If git name is not found or git is not available, use default
 if [[ -z "$GIT_NAME" ]]; then
-  _prompt "${YELLOW}Please enter your name: ${NC}" GIT_NAME
+  GIT_NAME="Anthony M"
+  echo "Using default name: $GIT_NAME"
 fi
-
-if [[ -z "$GITHUB_USER" ]]; then
-  _prompt "${YELLOW}Please enter your Github username: ${NC}" GITHUB_USER
-fi
-
-if [[ -z "$GITHUB_SECRETS_REPO" ]]; then
-  _prompt "${YELLOW}Please enter your Github secrets repository name: ${NC}" GITHUB_SECRETS_REPO
-fi
-
-export GITHUB_USER
-export GITHUB_SECRETS_REPO
 
 select_boot_disk() {
   local disks
@@ -95,23 +78,19 @@ select_boot_disk() {
   echo "$disks"
 
   # Warning message for data deletion
-  _print "${RED}WARNING: All data on the chosen disk will be erased during the installation!${NC}"
-  _prompt "${YELLOW}Please enter the name of your boot disk (e.g., sda, nvme0n1). Do not include the full path ("/dev/"): ${NC}" _boot_disk
+  _print "${RED}WARNING: All data on the chosen disk will be erased during the installation\!${NC}"
+  _boot_disk="vda"
+  echo "Using default boot disk: $_boot_disk"
 
-  # Confirmation for disk selection to prevent accidental data loss
-  _print "${YELLOW}You have selected $_boot_disk as the boot disk. This will delete everything on this disk. Are you sure? (Y/N): ${NC}"
-  read -r confirmation
-  if [[ "$confirmation" =~ ^[Yy]$ ]]; then
-    export BOOT_DISK=$_boot_disk
-  else
-    _print "${RED}Disk selection cancelled by the user. Please run the script again to select the correct disk.${NC}"
-    exit 1
-  fi
+  # Auto-confirm disk selection
+  echo "Auto-confirming disk selection: $_boot_disk"
+  export BOOT_DISK=$_boot_disk
 }
 
 # Set hostname and find primary disk if this is NixOS
-if [[ "$OS" != "Darwin" ]]; then
-  _prompt "${YELLOW}Please enter a hostname for the system: ${NC}" HOST_NAME
+if [[ "$OS" \!= "Darwin" ]]; then
+  HOST_NAME="nixosvm"
+  echo "Using default hostname: $HOST_NAME"
   export HOST_NAME
   select_boot_disk
 fi
@@ -122,29 +101,15 @@ confirm_details() {
   _print "Email: $GIT_EMAIL"
   _print "Name: $GIT_NAME${NC}"
 
-  if([[ "$OS" != "Darwin" ]]); then
+  if([[ "$OS" \!= "Darwin" ]]); then
     _print "${GREEN}Primary interface: $PRIMARY_IFACE"
     _print "Boot disk: $BOOT_DISK"
     _print "Hostname: $HOST_NAME${NC}"
   fi
 
-  _print "${GREEN}Secrets repository: $GITHUB_USER/$GITHUB_SECRETS_REPO${NC}"
-
-  _prompt "${YELLOW}Is this correct? yes/no: ${NC}" choice
-
-  case "$choice" in
-    [Nn] | [Nn][Oo] )
-      _print "${RED}Exiting script.${NC}"
-      exit 1
-      ;;
-    [Yy] | [Yy][Ee][Ss] )
-      _print "${GREEN}Continuing...${NC}"
-      ;;
-    * )
-      _print "${RED}Invalid option. Exiting script.${NC}"
-      exit 1
-      ;;
-  esac
+  choice="yes"
+  echo "Auto-confirming configuration: $choice"
+  _print "${GREEN}Continuing...${NC}"
 }
 
 # Call the confirmation function
@@ -153,14 +118,12 @@ confirm_details
 # Function to replace tokens in each file
 replace_tokens() {
   local file="$1"
-  if [[ $(basename $1) != "apply" ]]; then
+  if [[ $(basename $1) \!= "apply" ]]; then
     if [[ "$OS" == "Darwin" ]]; then
       # macOS
       LC_ALL=C LANG=C sed -i '' -e "s/%USER%/$USERNAME/g" "$file"
       LC_ALL=C LANG=C sed -i '' -e "s/%EMAIL%/$GIT_EMAIL/g" "$file"
       LC_ALL=C LANG=C sed -i '' -e "s/%NAME%/$GIT_NAME/g" "$file"
-      LC_ALL=C LANG=C sed -i '' -e "s/%GITHUB_USER%/$GITHUB_USER/g" "$file"
-      LC_ALL=C LANG=C sed -i '' -e "s/%GITHUB_SECRETS_REPO%/$GITHUB_SECRETS_REPO/g" "$file"
     else
       # Linux or other
       sed -i -e "s/%USER%/$USERNAME/g" "$file"
@@ -169,8 +132,6 @@ replace_tokens() {
       sed -i -e "s/%INTERFACE%/$PRIMARY_IFACE/g" "$file"
       sed -i -e "s/%DISK%/$BOOT_DISK/g" "$file"
       sed -i -e "s/%HOST%/$HOST_NAME/g" "$file"
-      sed -i -e "s/%GITHUB_USER%/$GITHUB_USER/g" "$file"
-      sed -i -e "s/%GITHUB_SECRETS_REPO%/$GITHUB_SECRETS_REPO/g" "$file"
     fi
   fi
 }
@@ -181,3 +142,4 @@ find . -type f -exec bash -c 'replace_tokens "$0"' {} \;
 
 echo "$USERNAME" > /tmp/username.txt
 _print "${GREEN}User $USERNAME information applied.${NC}"
+EOF < /dev/null
