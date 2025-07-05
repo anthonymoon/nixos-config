@@ -31,8 +31,7 @@ let user = "%USER%";
           # Enable BPF scheduler support
           BPF_SYSCALL = yes;
           BPF_JIT = yes;
-          # Optimize for x86-64-v3 (AVX, AVX2, BMI1, BMI2, F16C, FMA, LZCNT, MOVBE, XSAVE)
-          MHASWELL = yes;
+          # x86-64-v3 optimization is handled by -march=x86-64-v3 CFLAG
         };
       };
     });
