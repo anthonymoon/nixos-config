@@ -79,9 +79,10 @@
       
       devShells = forAllSystems devShell;
       apps = nixpkgs.lib.genAttrs linuxSystems mkLinuxApps;
-      nixosConfigurations = nixpkgs.lib.genAttrs linuxSystems (system:
-        nixpkgs.lib.nixosSystem {
-          inherit system;
+      nixosConfigurations = {
+        # Personal configuration 
+        personal = nixpkgs.lib.nixosSystem {
+          system = "x86_64-linux";
           specialArgs = inputs // { inherit user; };
           modules = [
             disko.nixosModules.disko
@@ -95,6 +96,23 @@
               };
             }
             ./hosts/nixos
+          ];
+        };
+      } // nixpkgs.lib.genAttrs linuxSystems (system:
+        nixpkgs.lib.nixosSystem {
+          inherit system;
+          specialArgs = inputs // { inherit user; };
+          modules = [
+            disko.nixosModules.disko
+            home-manager.nixosModules.home-manager {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                users.${user} = { config, pkgs, lib, ... }:
+                  import ./templates/starter/modules/shared/home-manager.nix { inherit config pkgs lib; };
+              };
+            }
+            ./templates/starter/hosts/nixos
           ];
         }
       );
