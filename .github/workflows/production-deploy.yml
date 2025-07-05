@@ -1,0 +1,258 @@
+name: Production - Bare Metal Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  PRODUCTION_HOST: "felix.ad.dirtybit.co"  # Replace with your bare metal hostname
+  SSH_USER: "amoon"
+
+jobs:
+  production-deploy:
+    name: Deploy to Production (Bare Metal)
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.PRODUCTION_SSH_KEY }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v24
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Pre-deployment validation
+        run: |
+          echo "🔍 Final pre-deployment validation..."
+          nix flake check --show-trace
+          nix build .#nixosConfigurations.x86_64-linux.config.system.build.toplevel --dry-run
+
+      - name: Create deployment snapshot
+        run: |
+          echo "📸 Creating pre-deployment snapshot..."
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF'
+            set -e
+            
+            # Get current generation info
+            CURRENT_GEN=$(readlink /nix/var/nix/profiles/system)
+            CURRENT_GEN_NUM=$(basename $CURRENT_GEN | cut -d'-' -f2)
+            
+            echo "Current generation: $CURRENT_GEN_NUM"
+            echo "Current path: $CURRENT_GEN"
+            
+            # Save deployment metadata
+            mkdir -p /var/log/nixos-deployments
+            cat > /var/log/nixos-deployments/pre-deploy-$(date +%Y%m%d_%H%M%S).json << METADATA
+            {
+              "timestamp": "$(date -Iseconds)",
+              "current_generation": "$CURRENT_GEN_NUM",
+              "current_path": "$CURRENT_GEN",
+              "commit_sha": "$GITHUB_SHA",
+              "deployment_user": "$GITHUB_ACTOR"
+            }
+            METADATA
+            
+            # Create filesystem snapshot if on ZFS/Btrfs
+            if command -v zfs >/dev/null; then
+              echo "Creating ZFS snapshot..."
+              sudo zfs snapshot rpool/ROOT/nixos@pre-deploy-$(date +%Y%m%d_%H%M%S) || echo "ZFS snapshot failed"
+            fi
+            
+            echo "✅ Pre-deployment snapshot created"
+          EOF
+
+      - name: Build and deploy configuration
+        run: |
+          echo "🏗️ Building production configuration..."
+          nix build .#nixosConfigurations.x86_64-linux.config.system.build.toplevel
+          
+          echo "📦 Deploying to production..."
+          nix copy --to ssh://$SSH_USER@$PRODUCTION_HOST ./result
+          
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF'
+            set -e
+            
+            echo "🚀 Switching to new configuration..."
+            
+            # Set the new configuration
+            sudo nix-env -p /nix/var/nix/profiles/system --set $(readlink ./result)
+            
+            # Switch to new configuration (this may cause temporary disconnection)
+            sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+            
+            echo "✅ Configuration switch completed"
+          EOF
+
+      - name: Wait for system recovery
+        run: |
+          echo "⏳ Waiting for system to stabilize after deployment..."
+          sleep 90
+          
+          # Wait for SSH to be available again
+          for i in {1..20}; do
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$PRODUCTION_HOST "echo 'System recovered'"; then
+              echo "✅ System recovered successfully"
+              break
+            fi
+            echo "Recovery check $i/20: Waiting for system..."
+            sleep 30
+          done
+
+      - name: Post-deployment health checks
+        run: |
+          echo "🏥 Running post-deployment health checks..."
+          
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF'
+            set -e
+            
+            echo "=== System Status ==="
+            systemctl is-system-running
+            uptime
+            
+            echo "=== Critical Services ==="
+            systemctl is-active sshd
+            systemctl is-active systemd-networkd || systemctl is-active NetworkManager
+            
+            # Check conditional services (only on bare metal)
+            if ! grep -E "(VMware|QEMU|VirtualBox)" /sys/class/dmi/id/product_name 2>/dev/null; then
+              echo "Running on bare metal - checking production services..."
+              
+              # Check media services
+              systemctl is-active jellyfin || echo "Jellyfin not active"
+              systemctl is-active samba || echo "Samba not active"
+              systemctl is-active docker || echo "Docker not active"
+              
+              # Check network configuration
+              ip addr show | grep "10.10.10.10" && echo "✅ Static IP configured" || echo "❌ Static IP missing"
+              
+              # Check Intel X710 interface
+              ip link show | grep -i "enp.*f0" && echo "✅ Intel X710 detected" || echo "⚠️ Intel X710 not found"
+            else
+              echo "Running in VM - skipping bare metal checks"
+            fi
+            
+            echo "=== Network Connectivity ==="
+            ping -c3 8.8.8.8
+            ping -c3 94.140.14.14  # AdGuard DNS
+            
+            echo "=== Hardware Status ==="
+            # Check NVIDIA if present
+            if command -v nvidia-smi >/dev/null; then
+              nvidia-smi --query-gpu=name,driver_version,temperature.gpu --format=csv,noheader,nounits
+            fi
+            
+            # Check disk health
+            df -h | grep -E "(/$|/boot)"
+            
+            echo "=== Performance Check ==="
+            load=$(uptime | awk -F'load average:' '{print $2}' | cut -d',' -f1 | xargs)
+            echo "Current load average: $load"
+            
+            echo "✅ Health checks completed"
+          EOF
+
+      - name: Verify deployment success
+        run: |
+          echo "✅ Verifying deployment success..."
+          
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF'
+            set -e
+            
+            # Get new generation info
+            NEW_GEN=$(readlink /nix/var/nix/profiles/system)
+            NEW_GEN_NUM=$(basename $NEW_GEN | cut -d'-' -f2)
+            
+            echo "New generation: $NEW_GEN_NUM"
+            
+            # Log successful deployment
+            cat > /var/log/nixos-deployments/deploy-success-$(date +%Y%m%d_%H%M%S).json << METADATA
+            {
+              "timestamp": "$(date -Iseconds)",
+              "new_generation": "$NEW_GEN_NUM",
+              "new_path": "$NEW_GEN",
+              "commit_sha": "$GITHUB_SHA",
+              "deployment_user": "$GITHUB_ACTOR",
+              "status": "success"
+            }
+            METADATA
+            
+            echo "✅ Deployment verified and logged"
+          EOF
+
+      - name: Cleanup old generations
+        run: |
+          echo "🧹 Cleaning up old generations..."
+          
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF'
+            set -e
+            
+            # Keep last 10 generations
+            sudo nix-collect-garbage --delete-older-than 30d
+            sudo nix-env -p /nix/var/nix/profiles/system --delete-generations +10
+            
+            echo "✅ Cleanup completed"
+          EOF
+
+      - name: Emergency rollback
+        if: failure()
+        run: |
+          echo "🚨 EMERGENCY ROLLBACK - Deployment failed!"
+          
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$PRODUCTION_HOST << 'EOF' || true
+            set -e
+            
+            echo "Attempting emergency rollback..."
+            
+            # Find the most recent pre-deployment snapshot
+            LAST_SNAPSHOT=$(ls -1 /var/log/nixos-deployments/pre-deploy-*.json 2>/dev/null | tail -1)
+            
+            if [ -f "$LAST_SNAPSHOT" ]; then
+              PREV_GEN_PATH=$(jq -r '.current_path' "$LAST_SNAPSHOT")
+              echo "Rolling back to: $PREV_GEN_PATH"
+              
+              sudo nix-env -p /nix/var/nix/profiles/system --set "$PREV_GEN_PATH"
+              sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+              
+              # Log rollback
+              cat > /var/log/nixos-deployments/rollback-$(date +%Y%m%d_%H%M%S).json << ROLLBACK
+              {
+                "timestamp": "$(date -Iseconds)",
+                "rolled_back_to": "$PREV_GEN_PATH",
+                "failed_commit": "$GITHUB_SHA",
+                "reason": "deployment_failure"
+              }
+              ROLLBACK
+              
+              echo "✅ Emergency rollback completed"
+            else
+              echo "❌ No rollback information found!"
+              echo "Manual intervention required!"
+              exit 1
+            fi
+          EOF
+
+      - name: Notify deployment status
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#infrastructure'
+          text: |
+            Production Deployment ${{ job.status == 'success' && '✅ SUCCESS' || '❌ FAILED' }}
+            
+            **Commit:** ${{ github.sha }}
+            **Branch:** ${{ github.ref_name }}
+            **Actor:** ${{ github.actor }}
+            
+            ${{ job.status == 'success' && 'Production system successfully updated!' || 'Deployment failed - check logs and system status!' }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: env.SLACK_WEBHOOK_URL != ''

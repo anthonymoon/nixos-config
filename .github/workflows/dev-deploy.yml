@@ -1,0 +1,221 @@
+name: Dev Branch - VM Deployment & Smoke Tests
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+env:
+  VM_HOST: "dev-vm.ad.dirtybit.co"  # Replace with your dev VM
+  SSH_USER: "amoon"
+
+jobs:
+  validate:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v24
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Validate configuration
+        run: |
+          echo "🔍 Validating configuration..."
+          nix flake check --show-trace
+          nix build .#nixosConfigurations.x86_64-linux.config.system.build.toplevel --dry-run
+
+  deploy-vm:
+    name: Deploy to Dev VM
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.ref == 'refs/heads/dev'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.DEV_VM_SSH_KEY }}
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v24
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build configuration
+        run: |
+          echo "🏗️ Building configuration..."
+          nix build .#nixosConfigurations.x86_64-linux.config.system.build.toplevel
+
+      - name: Copy configuration to VM
+        run: |
+          echo "📦 Copying configuration to VM..."
+          nix copy --to ssh://$SSH_USER@$VM_HOST ./result
+
+      - name: Deploy to VM
+        run: |
+          echo "🚀 Deploying to dev VM..."
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_HOST << 'EOF'
+            set -e
+            echo "Creating backup of current generation..."
+            CURRENT_GEN=$(readlink /nix/var/nix/profiles/system)
+            echo $CURRENT_GEN > /tmp/pre-deploy-generation
+            
+            echo "Switching to new configuration..."
+            sudo nix-env -p /nix/var/nix/profiles/system --set $(readlink ./result)
+            sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+            
+            echo "✅ Deployment completed"
+          EOF
+
+      - name: Wait for system stabilization
+        run: |
+          echo "⏳ Waiting for system to stabilize..."
+          sleep 30
+          
+          # Wait for SSH to be available again
+          for i in {1..10}; do
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 $SSH_USER@$VM_HOST "echo 'SSH available'"; then
+              echo "✅ SSH connection restored"
+              break
+            fi
+            echo "Attempt $i/10: Waiting for SSH..."
+            sleep 30
+          done
+
+  smoke-tests:
+    name: Smoke Tests
+    runs-on: ubuntu-latest
+    needs: deploy-vm
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.DEV_VM_SSH_KEY }}
+
+      - name: Run smoke tests
+        run: |
+          echo "🧪 Running smoke tests..."
+          
+          # Test SSH connectivity
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_HOST << 'EOF'
+            set -e
+            
+            echo "=== System Status ==="
+            systemctl is-system-running || true
+            
+            echo "=== Critical Services ==="
+            systemctl is-active sshd
+            systemctl is-active systemd-networkd || systemctl is-active NetworkManager
+            
+            echo "=== User Environment ==="
+            whoami
+            which zsh
+            which hyprland || echo "Hyprland not in PATH (expected for headless)"
+            
+            echo "=== Network Connectivity ==="
+            ping -c3 8.8.8.8
+            
+            echo "=== Nix Store ==="
+            nix-store --verify --check-contents || true
+            
+            echo "=== VM-specific checks ==="
+            # Check if we're actually in a VM
+            if [ -f /sys/class/dmi/id/product_name ]; then
+              cat /sys/class/dmi/id/product_name | grep -E "(VMware|QEMU|VirtualBox)" && echo "✅ Running in VM as expected"
+            fi
+            
+            echo "=== Service Status ==="
+            systemctl --failed
+            
+            echo "✅ All smoke tests passed"
+          EOF
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "❌ Smoke tests failed, rolling back..."
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_HOST << 'EOF'
+            set -e
+            if [ -f /tmp/pre-deploy-generation ]; then
+              PREV_GEN=$(cat /tmp/pre-deploy-generation)
+              echo "Rolling back to: $PREV_GEN"
+              sudo nix-env -p /nix/var/nix/profiles/system --set $PREV_GEN
+              sudo /nix/var/nix/profiles/system/bin/switch-to-configuration switch
+              echo "✅ Rollback completed"
+            else
+              echo "❌ No previous generation found for rollback"
+              exit 1
+            fi
+          EOF
+
+  auto-promote:
+    name: Auto-promote to Staging
+    runs-on: ubuntu-latest
+    needs: [deploy-vm, smoke-tests]
+    if: github.ref == 'refs/heads/dev' && success()
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      - name: Promote to staging
+        run: |
+          echo "🚀 Promoting dev to staging branch..."
+          
+          # Create or update staging branch
+          git checkout -B staging
+          git push origin staging --force
+          
+          echo "✅ Successfully promoted to staging"
+
+      - name: Create PR to main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: staging
+          base: main
+          title: "🚀 Deploy: Staging → Main"
+          body: |
+            ## Deployment Request: Staging → Main
+            
+            **Source:** `dev` branch (commit: ${{ github.sha }})
+            **Target:** `main` branch (production deployment)
+            
+            ### ✅ Validation Status
+            - [x] Dev VM deployment successful
+            - [x] Smoke tests passed
+            - [ ] Staging integration tests (pending)
+            
+            ### 🚀 Next Steps
+            1. Staging integration tests will run automatically
+            2. Manual approval required for production deployment
+            3. Production deployment will target bare metal system
+            
+            **Review carefully before merging to production!**
+          labels: |
+            deployment
+            staging-to-main
+            needs-review

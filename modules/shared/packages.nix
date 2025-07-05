@@ -19,7 +19,6 @@ with pkgs; [
   act # Run Github actions locally
   age # File encryption tool
   age-plugin-yubikey # YubiKey plugin for age encryption
-  alacritty # GPU-accelerated terminal emulator
   aspell # Spell checker
   aspellDicts.en # English dictionary for aspell
 
@@ -43,7 +42,8 @@ with pkgs; [
 
   # G
   gcc # GNU Compiler Collection
-  gh # GitHub CLI
+  gh # GitHub CLI (ensure it's present)
+  git # Git version control (ensure it's present)
   glow # Markdown renderer for terminal
   gnupg # GNU Privacy Guard
   gopls # Go language server
@@ -68,12 +68,16 @@ with pkgs; [
   libfido2 # FIDO2 library
 
   # M
+  mtr # Network diagnostic tool
   myPHP # Custom PHP with extensions
   myPython # Custom Python with packages
 
   # N
   ncurses # Terminal control library with terminfo database
+  ncdu # NCurses disk usage analyzer
   neofetch # System information tool
+  neovim # Text editor
+  netcat-gnu # GNU netcat implementation
   ngrok # Secure tunneling service
   nodePackages_latest.live-server # Development server with live reload
   nodePackages_latest.nodemon # Node.js file watcher
@@ -96,7 +100,9 @@ with pkgs; [
 
   # S
   slack # Team communication app
+  socat # Bidirectional data relay
   sqlite # SQL database engine
+  strace # System call tracer
 
   # T
   terraform # Infrastructure as code tool
@@ -108,12 +114,13 @@ with pkgs; [
   # U
   unrar # RAR archive extractor
   unzip # ZIP archive extractor
-  uv # Python package installer
+  uv # Python package installer (ensure it's present)
 
   # W
   wget # File downloader
 
   # Z
   zip # ZIP archive creator
+  zoxide # Smart cd command
   zsh-powerlevel10k # Zsh theme
 ] ++ myFonts

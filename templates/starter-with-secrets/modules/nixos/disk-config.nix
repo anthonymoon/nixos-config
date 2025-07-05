@@ -1,9 +1,14 @@
 _: {
+  # Enable ZRAM with half system memory
+  zramSwap = {
+    enable = true;
+    memoryPercent = 50;
+  };
   # This formats the disk with the ext4 filesystem
   # Other examples found here: https://github.com/nix-community/disko/tree/master/example
   disko.devices = {
     disk = {
-      vdb = {
+      vda = {
         device = "/dev/%DISK%";
         type = "disk";
         content = {
@@ -11,7 +16,7 @@ _: {
           partitions = {
             ESP = {
               type = "EF00";
-              size = "100M";
+              size = "1G";
               content = {
                 type = "filesystem";
                 format = "vfat";
@@ -22,7 +27,7 @@ _: {
               size = "100%";
               content = {
                 type = "filesystem";
-                format = "ext4";
+                format = "xfs";
                 mountpoint = "/";
               };
             };

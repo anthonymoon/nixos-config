@@ -1,8 +1,8 @@
 { config, pkgs, lib, ... }:
 
-let name = "Dustin Lyons";
-    user = "dustin";
-    email = "dustin@dlyons.dev"; in
+let name = "Anthony Moon";
+    user = "amoon";
+    email = "tonymoon@gmail.com"; in
 {
 
   direnv = {
@@ -27,6 +27,9 @@ let name = "Dustin Lyons";
           file = "p10k.zsh";
       }
     ];
+    zinit = {
+      enable = true;
+    };
     initContent = lib.mkBefore ''
       if [[ -f /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
         . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
@@ -47,14 +50,17 @@ let name = "Dustin Lyons";
 
       # Claude GUI
       alias claude-desktop='nohup claude-desktop > /dev/null 2>&1 & disown'
+      
+      # FZF integration
+      source ${pkgs.fzf}/share/fzf/key-bindings.zsh
+      source ${pkgs.fzf}/share/fzf/completion.zsh
+      
+      # McFly shell history search
+      eval "$(${pkgs.mcfly}/bin/mcfly init zsh)"
 
-      # Emacs is my editor
-      export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -t"
-      export VISUAL="emacsclient -c -a emacs"
-      e() {
-          emacsclient -t "$@"
-      }
+      # Neovim is my editor
+      export EDITOR="nvim"
+      export VISUAL="nvim"
       
       # Laravel Artisan
       alias art='php artisan'
@@ -78,7 +84,7 @@ let name = "Dustin Lyons";
     extraConfig = {
       init.defaultBranch = "main";
       core = {
-	    editor = "vim";
+	    editor = "nvim";
         autocrlf = "input";
       };
       commit.gpgsign = true;
@@ -197,62 +203,6 @@ let name = "Dustin Lyons";
       '';
      };
 
-  alacritty = {
-    enable = true;
-    settings = {
-      cursor = {
-        style = "Block";
-      };
-
-      window = {
-        opacity = 1.0;
-        padding = {
-          x = 24;
-          y = 24;
-        };
-      };
-
-      font = {
-        normal = {
-          family = "MesloLGS NF";
-          style = "Regular";
-        };
-        size = lib.mkMerge [
-          (lib.mkIf pkgs.stdenv.hostPlatform.isLinux 10)
-          (lib.mkIf pkgs.stdenv.hostPlatform.isDarwin 14)
-        ];
-      };
-
-      colors = {
-        primary = {
-          background = "0x1f2528";
-          foreground = "0xc0c5ce";
-        };
-
-        normal = {
-          black = "0x1f2528";
-          red = "0xec5f67";
-          green = "0x99c794";
-          yellow = "0xfac863";
-          blue = "0x6699cc";
-          magenta = "0xc594c5";
-          cyan = "0x5fb3b3";
-          white = "0xc0c5ce";
-        };
-
-        bright = {
-          black = "0x65737e";
-          red = "0xec5f67";
-          green = "0x99c794";
-          yellow = "0xfac863";
-          blue = "0x6699cc";
-          magenta = "0xc594c5";
-          cyan = "0x5fb3b3";
-          white = "0xd8dee9";
-        };
-      };
-    };
-  };
 
   ssh = {
     enable = true;
