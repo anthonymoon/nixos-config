@@ -172,7 +172,9 @@ validate_configuration() {
   fi
   
   echo -e "\e[1;32mConfiguration validation passed\e[0m"
-}\n\ninstall_nixos() {
+}
+
+install_nixos() {
   ARCH=$(uname -m)
 
   case "$ARCH" in
