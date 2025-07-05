@@ -41,6 +41,11 @@ setup_files() {
   cd /mnt/etc/nixos
 }
 
+generate_hardware_config() {
+  echo -e "\e[1;32mGenerating hardware configuration...\e[0m"
+  sudo nixos-generate-config --show-hardware-config > /mnt/etc/nixos/hosts/nixos/hardware-configuration.nix
+}
+
 install_nixos() {
   ARCH=$(uname -m)
 
@@ -71,6 +76,7 @@ download_config
 run_apply
 run_disko
 setup_files
+generate_hardware_config
 install_nixos
 cleanup
 prompt_reboot
