@@ -21,8 +21,12 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nix-gaming = {
+      url = "github:fufexan/nix-gaming";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
-  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix } @inputs:
+  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix, nix-gaming } @inputs:
     let
       user = "amoon";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];

@@ -70,19 +70,16 @@ shared-packages ++ [
   jackett # Torrent/NZB indexer proxy
   qbittorrent # BitTorrent client
 
-  # Gaming
+  # Gaming (launchers and GUI tools only - wine/proton packages in host config)
   steam # Steam gaming platform
   steam-run # Steam runtime for running games
   protonup-qt # Proton version manager GUI
   protontricks # Wine wrapper for Steam
-  winetricks # Wine helper script
-  wine-staging # Wine with experimental patches
   lutris # Gaming platform manager
   mangohud # Gaming overlay
   gamemode # Gaming performance optimization
   vulkan-tools # Vulkan utilities
   vulkan-loader # Vulkan loader
-  dxvk # DirectX to Vulkan translation
   occt # GPU stress testing
   geekbench # System benchmarking
 

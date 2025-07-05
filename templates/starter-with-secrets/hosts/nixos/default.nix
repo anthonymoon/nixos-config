@@ -8,6 +8,8 @@ let user = "%USER%";
     ../../modules/nixos/disk-config.nix
     ../../modules/shared
     agenix.nixosModules.default
+    inputs.nix-gaming.nixosModules.pipewireLowLatency
+    inputs.nix-gaming.nixosModules.platformOptimizations
   ];
 
   # Use the systemd-boot EFI boot loader.
@@ -209,8 +211,15 @@ let user = "%USER%";
     settings = {
       allowed-users = [ "${user}" ];
       trusted-users = [ "@admin" "${user}" ];
-      substituters = [ "https://nix-community.cachix.org" "https://cache.nixos.org" ];
-      trusted-public-keys = [ "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" ];
+      substituters = [ 
+        "https://nix-community.cachix.org" 
+        "https://nix-gaming.cachix.org"
+        "https://cache.nixos.org" 
+      ];
+      trusted-public-keys = [ 
+        "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=" 
+        "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
+      ];
     };
 
     package = pkgs.nix;
@@ -483,10 +492,39 @@ let user = "%USER%";
     noto-fonts-emoji
   ];
 
+  # Enable gaming optimizations
+  programs.steam.platformOptimizations.enable = true;
+  
+  # Enable low-latency audio for gaming
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+    lowLatency = {
+      enable = true;
+      quantum = 64;
+      rate = 48000;
+    };
+  };
+  
+  # Make pipewire realtime-capable
+  security.rtkit.enable = true;
+
   environment.systemPackages = with pkgs; [
     agenix.packages."${pkgs.system}".default # "x86_64-linux"
     gitAndTools.gitFull
     inetutils
+    
+    # Gaming packages from nix-gaming
+    inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
+    inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
+    inputs.nix-gaming.packages.${pkgs.system}.wine-mono
+    inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
+    # Try winetricks-git first, fallback to standard winetricks
+    (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
+    wine-staging  # Keep standard wine
+    dxvk          # Keep standard dxvk as fallback
   ];
 
   system.stateVersion = "21.05"; # Don't change this
