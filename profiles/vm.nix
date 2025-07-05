@@ -13,7 +13,7 @@
     # Guest agent services (already enabled in vm-qemu.nix hardware profile)
     
     # Faster boot for VMs
-    systemd-timesyncd.enable = false; # Not needed in VMs usually
+    timesyncd.enable = false; # Not needed in VMs usually
   };
 
   # VM performance optimizations

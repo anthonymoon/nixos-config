@@ -11,17 +11,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DISK="${DISK:-/dev/vda}"
-FLAKE_REPO="github:anthonymoon/nixos-config"
-
-# Available configurations
-declare -A CONFIGS=(
-    ["1"]="vm-minimal:Minimal VM setup (no desktop)"
-    ["2"]="vm-workstation:VM with full desktop environment"  
-    ["3"]="vm-server:VM optimized for server workloads"
-    ["4"]="workstation:Physical machine with desktop"
-    ["5"]="server:Physical machine for server use"
-    ["6"]="minimal:Physical machine minimal setup"
-)
+FLAKE_URI=".#"
 
 log() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -50,23 +40,21 @@ select_config() {
         echo "$1"
         return
     fi
+
+    local configs=$(nix flake show --json ${FLAKE_URI} | jq -r '.nixosConfigurations | keys[]')
     
     echo -e "${BLUE}Available NixOS Configurations:${NC}"
     echo "────────────────────────────────────────"
-    for key in $(printf '%s\n' "${!CONFIGS[@]}" | sort); do
-        IFS=':' read -r config desc <<< "${CONFIGS[$key]}"
-        printf "%s) %-15s - %s\n" "$key" "$config" "$desc"
-    done
+    echo "$configs"
     echo "────────────────────────────────────────"
     
     while true; do
-        read -p "Select configuration [1-6]: " choice
-        if [[ -n "${CONFIGS[$choice]:-}" ]]; then
-            IFS=':' read -r config desc <<< "${CONFIGS[$choice]}"
-            echo "$config"
+        read -p "Select a configuration: " choice
+        if echo "$configs" | grep -wq "$choice"; then
+            echo "$choice"
             return
         fi
-        warn "Invalid choice. Please select 1-6."
+        warn "Invalid choice. Please select one of the available configurations."
     done
 }
 
@@ -165,7 +153,7 @@ install_nixos() {
     nixos-generate-config --root /mnt
     
     # Install with selected configuration
-    if ! nixos-install --flake "$FLAKE_REPO#$config" --no-root-passwd; then
+    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd; then
         error "NixOS installation failed"
     fi
     

@@ -15,7 +15,7 @@ import <nixpkgs/nixos/tests/make-test-python.nix> ({ pkgs, lib, ... }:
     # Test VM node with our configuration
     testvm = { config, pkgs, modulesPath, ... }: {
       imports = [
-        ../hosts/nixos/default.nix
+        
         (modulesPath + "/virtualisation/qemu-vm.nix")
       ];
       

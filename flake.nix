@@ -3,14 +3,14 @@
   description = "Bulletproof NixOS Configuration with Profile-Based Architecture";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    nixpkgs.url = "github.nixos/nixpkgs/nixos-unstable";
+    # home-manager = {
+    #   url = "github.nix-community/home-manager";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
   };
 
-  outputs = { self, nixpkgs, home-manager, ... } @ inputs:
+  outputs = { self, nixpkgs, ... } @ inputs:
     let
       system = "x86_64-linux";
       user = "amoon";
@@ -43,10 +43,11 @@
           ./profiles/${profile}.nix
           
           # Layer 4: VM-specific optimizations (only for VM configs)
-          (nixpkgs.lib.mkIf (nixpkgs.lib.hasPrefix "vm-" name) ./profiles/vm.nix)
+        ] ++ nixpkgs.lib.optionals (nixpkgs.lib.hasPrefix "vm-" name) [
+          ./profiles/vm.nix
           
           # Layer 5: Home Manager integration
-          home-manager.nixosModules.home-manager
+          # home-manager.nixosModules.home-manager
         ];
       };
       
@@ -58,22 +59,7 @@
       apps.${system} = {
         install = {
           type = "app";
-          program = "${./install/install.sh}";
-        };
-        
-        # Quick access to common configs
-        install-vm = {
-          type = "app"; 
-          program = "${nixpkgs.legacyPackages.${system}.writeShellScript "install-vm" ''
-            ${./install/install.sh} vm-workstation
-          ''}";
-        };
-        
-        install-workstation = {
-          type = "app";
-          program = "${nixpkgs.legacyPackages.${system}.writeShellScript "install-workstation" ''
-            ${./install/install.sh} workstation  
-          ''}";
+          program = "./install/install.sh";
         };
       };
       
@@ -88,7 +74,7 @@
         shellHook = ''
           echo "🚀 NixOS Config Development Shell"
           echo "Available configurations:"
-          echo ${builtins.concatStringsSep "\\n" (builtins.attrNames configurations)}
+          echo ${builtins.concatStringsSep "\n" (builtins.attrNames configurations)}
           echo ""
           echo "Test with: nix build .#nixosConfigurations.<config>.config.system.build.toplevel"
         '';

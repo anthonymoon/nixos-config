@@ -85,7 +85,7 @@
   services.flatpak.enable = true;
   xdg.portal = {
     enable = true;
-    extraPortals = [ pkgs.xdg-desktop-portal-kde ];
+    extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
   };
 
   # Virtualization
@@ -93,29 +93,29 @@
   users.users.${user}.extraGroups = [ "docker" ];
 
   # Home manager integration
-  home-manager = {
-    useGlobalPkgs = true;
-    useUserPackages = true;
-    users.${user} = { config, pkgs, lib, ... }: {
-      home.stateVersion = "24.05";
+  # home-manager = {
+  #   useGlobalPkgs = true;
+  #   useUserPackages = true;
+  #   users.${user} = { config, pkgs, lib, ... }: {
+  #     home.stateVersion = "24.05";
       
-      # Basic home configuration
-      programs = {
-        git = {
-          enable = true;
-          userName = "Anthony Moon";
-          userEmail = "tonymoon@gmail.com";
-        };
+  #     # Basic home configuration
+  #     programs = {
+  #       git = {
+  #         enable = true;
+  #         userName = "Anthony Moon";
+  #         userEmail = "tonymoon@gmail.com";
+  #       };
         
-        zsh = {
-          enable = true;
-          oh-my-zsh = {
-            enable = true;
-            theme = "robbyrussell";
-            plugins = [ "git" "docker" ];
-          };
-        };
-      };
-    };
-  };
+  #       zsh = {
+  #         enable = true;
+  #         oh-my-zsh = {
+  #           enable = true;
+  #           theme = "robbyrussell";
+  #           plugins = [ "git" "docker" ];
+  #         };
+  #       };
+  #     };
+  #   };
+  # };
 }
