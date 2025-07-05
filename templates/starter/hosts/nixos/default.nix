@@ -25,19 +25,8 @@ in {
     initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
     # Uncomment for AMD GPU
     # initrd.kernelModules = [ "amdgpu" ];
-    kernelPackages = pkgs.linuxPackages_latest.extend (final: prev: {
-      kernel = prev.kernel.override {
-        stdenv = pkgs.stdenvAdapters.withCFlags [ "-march=x86-64-v3" ] pkgs.stdenv;
-        structuredExtraConfig = with pkgs.lib.kernel; {
-          # Enable sched-ext extensible scheduler framework
-          SCHED_CLASS_EXT = yes;
-          # Enable BPF scheduler support
-          BPF_SYSCALL = yes;
-          BPF_JIT = yes;
-          # x86-64-v3 optimization is handled by -march=x86-64-v3 CFLAG
-        };
-      };
-    });
+    # Use standard latest kernel to avoid build issues in VMs
+    kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "uinput" ];
     # Kernel parameters for NVMe/SSD optimization and performance
     kernelParams = [
@@ -230,31 +219,7 @@ in {
     '';
   };
 
-  # Enable sched-ext extensible scheduler framework
-  # SCX scheduler packages will be added to systemPackages below
-
-  # Configure scx scheduler service
-  systemd.services.scx-scheduler = {
-    description = "SCX Scheduler Service";
-    after = [ "multi-user.target" ];
-    wantedBy = [ "multi-user.target" ];
-    serviceConfig = {
-      Type = "forking";
-      ExecStart = "${pkgs.writeShellScript "start-scx" ''
-        # Set SCX scheduler to scx_lavd
-        echo "scx_lavd" > /etc/default/scx
-        # Start the scheduler (implementation depends on scx package)
-        # This is a placeholder - actual implementation needed
-      ''}";
-      Restart = "on-failure";
-      RestartSec = 5;
-    };
-  };
-
-  # Create /etc/default/scx configuration
-  environment.etc."default/scx".text = ''
-    SCX_SCHEDULER="scx_lavd"
-  '';
+  # SCX scheduler requires custom kernel build - disabled for standard kernel
 
   # Manages keys and such
   programs = {
@@ -522,8 +487,6 @@ in {
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull
     inetutils
-    # Add scx scheduler packages when available
-    # Note: These may need to be built from source or custom overlay
     
     # Gaming packages from nix-gaming
     inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
