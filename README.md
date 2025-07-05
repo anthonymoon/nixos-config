@@ -1,6 +1,6 @@
-# General Purpose Nix Configuration (macOS + NixOS)
-[![Build Starter Template](https://github.com/anthonymoon/nixos-config/actions/workflows/build.yml/badge.svg)](https://github.com/anthonymoon/nixos-config/actions/workflows/build.yml)
-[![Statix Lint](https://github.com/anthonymoon/nixos-config/actions/workflows/lint.yml/badge.svg)](https://github.com/anthonymoon/nixos-config/actions/workflows/lint.yml)
+# 🚀 Bulletproof NixOS Configuration
+
+**Zero-Failure Architecture | Profile-Based | No Runtime Detection**
 
 ## Overview
 Hey, you made it! Welcome. 🤓
@@ -15,529 +15,935 @@ Check out the step-by-step commands below to get started!
 
 ## Table of Contents
 
-- [Nix Config for macOS + NixOS](#nix-config-for-macos--nixos)
-  - [Overview](#overview)
-  - [Table of Contents](#table-of-contents)
-  - [Features](#features)
-  - [Testimonials](#testimonials)
-  - [Videos](#videos)
-    - [macOS](#macos)
-      - [Updating dependencies with one command](#updating-dependencies-with-one-command)
-      - [Fast Terminal-based Development](#fast-terminal-based-development)
-    - [NixOS](#nixos)
-  - [Disclaimer](#disclaimer)
-  - [Layout](#layout)
-  - [Installing](#installing)
-    - [For macOS (May 2025)](#for-macos-may-2025)
-      - [1. Install dependencies](#1-install-dependencies)
-      - [2. Install Nix](#2-install-nix)
-      - [3. Initialize a starter template](#3-initialize-a-starter-template)
-      - [4. Make apps executable](#4-make-apps-executable)
-      - [5. Apply your current user info](#5-apply-your-current-user-info)
-      - [6. Decide what packages to install](#6-decide-what-packages-to-install)
-      - [7. Review your shell configuration](#7-review-your-shell-configuration)
-      - [8. Optional: Setup secrets](#8-optional-setup-secrets)
-      - [9. Install configuration](#9-install-configuration)
-      - [10. Make changes](#10-make-changes)
-    - [For NixOS](#for-nixos)
-      - [1. Burn and use the latest ISO](#1-burn-and-use-the-latest-iso)
-      - [2. Optional: Setup secrets](#2-optional-setup-secrets)
-      - [3. Install configuration](#3-install-configuration)
-      - [4. Set user password](#4-set-user-password)
-  - [How to Create Secrets](#how-to-create-secrets)
-  - [Making Changes](#making-changes)
-      - [Development workflow](#development-workflow)
-      - [Trying packages](#trying-packages)
-  - [Compatibility and Feedback](#compatibility-and-feedback)
-    - [Platforms](#platforms)
-    - [Contributing](#contributing)
-    - [Feedback and Questions](#feedback-and-questions)
-    - [License](#license)
-  - [Appendix](#appendix)
-    - [Why Nix Flakes](#why-nix-flakes)
-    - [NixOS Components](#nixos-components)
-    - [Support](#support)
-    - [Stars](#stars)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Key Features](#key-features)
+- [Development](#development)
+- [Migration from v1](#migration-from-v1)
+- [Support](#support)
+- [Philosophy](#philosophy)
+- [Testimonials](#testimonials)
+- [Videos](#videos)
+  - [macOS](#macos)
+  - [NixOS](#nixos)
+- [Disclaimer](#disclaimer)
+- [Layout](#layout)
+- [Installing](#installing)
+  - [For macOS (May 2025)](#for-macos-may-2025)
+  - [For NixOS](#for-nixos)
+- [How to Create Secrets](#how-to-create-secrets)
+- [Making Changes](#making-changes)
+- [Compatibility and Feedback](#compatibility-and-feedback)
+- [Appendix](#appendix)
+  - [Why Nix Flakes](#why-nix-flakes)
+  - [NixOS Components](#nixos-components)
+  - [License](#license)
+  - [Stars](#stars)
 
+## Quick Start
 
+### Installation
+```bash
+# Interactive menu (recommended)
+sudo nix run github:anthonymoon/nixos-config#install
 
-
-
-## Features
-- **Nix Flakes**: No confusing `configuration.nix` entry point, [no Nix channels](#why-nix-flakes)─ just `flake.nix`
-- **Same Environment Everywhere**: Easily share config across Linux and macOS (both Nix and Home Manager)
-- **macOS Dream Setup**: Fully declarative macOS (Apple / Intel) w/ UI, dock and macOS App Store apps
-- **Simple Bootstrap**: Simple Nix commands to start from zero, both x86 and macOS platforms
-- **Managed Homebrew**: Zero maintenance homebrew environment with `nix-darwin` and `nix-homebrew`
-- **Disk Management**: Declarative disk management with `disko`, say goodbye to disk utils
-- **Secrets Management**: Declarative secrets with `agenix` for SSH, PGP, syncthing, and other tools
-- **Modern Text Editing**: Neovim with sensible defaults for efficient development
-- **Built In Home Manager**: `home-manager` module for seamless configuration (no extra clunky CLI steps)
-- **NixOS Environment**: Extensively configured NixOS including clean aesthetic + window animations
-- **Nix Overlays**: [Auto-loading of Nix overlays](https://github.com/anthonymoon/nixos-config/tree/main/overlays): drop a file in a dir and it runs _(great for patches!)_
-- **Declarative Sync**: No-fuss Syncthing: managed keys, certs, and configuration across all platforms
-- **Vim Configuration**: Well-configured Vim and Neovim for efficient text editing
-- **Simplicity and Readability**: Optimized for simplicity and readability in all cases, not small files everywhere
-- **Backed by Continuous Integration**: Flake auto updates weekly if changes don't break starter build
-
-## Testimonials
-
-![Screenshot 2024-10-31 at 9 32 38 AM](https://github.com/user-attachments/assets/0fb34422-adcb-41e3-b6a8-dcfebf0f40b8)
-
-![Screenshot 2024-10-31 at 11 07 07 AM](https://github.com/user-attachments/assets/53873d42-de6e-4368-9184-c9b71b6ebd01)
-
-![Screenshot 2024-10-31 at 9 33 27 AM](https://github.com/user-attachments/assets/eaf19ca6-2fb9-4536-98b6-8df70aa04039)
-
-![Screenshot 2024-10-31 at 11 00 11 AM](https://github.com/user-attachments/assets/8f306a62-5a89-4f10-ab08-c151e7951c27)
-
-![Screenshot 2025-01-28 at 1 56 59 PM](https://github.com/user-attachments/assets/14d29d81-53b1-4e0e-b8f7-189677e3a36c)
-
-## Videos
-### macOS
-#### Updating dependencies with one command
-https://github.com/anthonymoon/nixos-config/assets/1292576/2168d482-6eea-4b51-adc1-2ef1291b6598
-
-#### Fast Terminal-based Development
-- **GUI**
-
-https://github.com/anthonymoon/nixos-config/assets/1292576/66001066-2bbf-4492-bc9e-60ea1abeb987
-
-- **Terminal**
-
-https://github.com/anthonymoon/nixos-config/assets/1292576/d96f59ce-f540-4f14-bc61-6126a74f9f52
-
-### NixOS
-
-https://github.com/anthonymoon/nixos-config/assets/1292576/fa54a87f-5971-41ee-98ce-09be048018b8
-
-## Disclaimer
-Installing Nix on macOS will create an entirely separate volume. It may exceed many gigabytes in size.
-
-Some folks don't like this. If this is you, turn back now!
-
-> [!NOTE]
-> Don't worry, you can always [uninstall](https://github.com/DeterminateSystems/nix-installer#uninstalling) Nix later.
-
-## Layout
-```
-.
-├── apps         # Nix commands used to bootstrap and build configuration
-├── hosts        # Host-specific configuration
-├── modules      # macOS and nix-darwin, NixOS, and shared configuration
-├── overlays     # Drop an overlay file in this dir, and it runs. So far, mainly patches.
-├── templates    # Starter versions of this configuration
+# Direct installation
+sudo nix run github:anthonymoon/nixos-config#install vm-workstation
+sudo nix run github:anthonymoon/nixos-config#install workstation
 ```
 
-## Installing
-## For macOS (May 2025)
-This configuration supports both Intel and Apple Silicon Macs.
+### Available Configurations
 
-### 1. Install dependencies
-```sh
-xcode-select --install
+| Configuration    | Hardware      | Profile     | Description                    |
+|-----------------|---------------|-------------|--------------------------------|
+| `vm-minimal`    | QEMU VM       | Minimal     | Minimal VM (SSH only)         |
+| `vm-workstation`| QEMU VM       | Workstation | VM with KDE + gaming + dev     |
+| `vm-server`     | QEMU VM       | Server      | VM for server workloads       |
+| `workstation`   | Physical UEFI | Workstation | Desktop + gaming + development |
+| `server`        | Physical UEFI | Server      | Headless server services      |
+| `minimal`       | Physical UEFI | Minimal     | Minimal physical install      |
+
+## Architecture
+
+### Zero-Failure Design
+- ✅ **Predictable filesystem labels** (`boot`, `nixos`) - never UUIDs
+- ✅ **No runtime detection** - everything declared explicitly  
+- ✅ **Profile composition** - mix and match hardware + use cases
+- ✅ **Single installer** - bulletproof partitioning and setup
+- ✅ **Layer-based** - clear separation of concerns
+
+### Layered Profile System
+```
+Layer 1: profiles/base.nix          # Universal foundation
+Layer 2: hardware/{vm-qemu,generic-uefi}.nix  # Hardware declaration  
+Layer 3: profiles/{minimal,workstation,server}.nix  # Use case
+Layer 4: profiles/vm.nix            # VM optimizations (if VM)
+Layer 5: home-manager               # User configuration
 ```
 
-### 2. Install Nix
-Thank you for the [installer](https://zero-to-nix.com/concepts/nix-installer), [Determinate Systems](https://determinate.systems/)!
-```sh
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+### Directory Structure
+```
+nixos-config/
+├── flake.nix           # Streamlined flake with 6 configurations
+├── profiles/           # Use-case profiles
+│   ├── base.nix       # Universal foundation (users, packages, nix)
+│   ├── minimal.nix    # Bare essentials only
+│   ├── vm.nix         # VM optimizations
+│   ├── workstation.nix # KDE + gaming + development
+│   └── server.nix     # Headless server services
+├── hardware/          # Hardware profiles (explicit declaration)
+│   ├── vm-qemu.nix    # QEMU VM hardware
+│   └── generic-uefi.nix # Physical UEFI machines
+└── install/
+    └── install.sh     # Bulletproof installer
 ```
 
-After installation, open a new terminal session to make the `nix` executable available in your `$PATH`. You'll need this in the steps ahead.
+## Key Features
 
-> [!IMPORTANT]
->
-> The installer will ask if you want to install Determinate Nix. Answer _No_ as it [currently conflicts](https://github.com/anthonymoon/nixos-config/issues/146) with `nix-darwin`.
+### Bulletproof Installation
+- **Predictable partitioning**: Always creates `boot` and `nixos` labels
+- **Zero UUID confusion**: Uses filesystem labels, not discovery
+- **Comprehensive validation**: Checks every step
+- **Interactive menu**: Clear configuration selection
+- **No template complexity**: Single installer for everything
 
-> [!IMPORTANT]
->
-> If using [the official installation instructions](https://nixos.org/download) instead, [`flakes`](https://nixos.wiki/wiki/Flakes) and [`nix-command`](https://nixos.wiki/wiki/Nix_command) aren't available by default.
->
-> You'll need to enable them.
->
-> **Add this line to your `/etc/nix/nix.conf` file**
-> ```
-> experimental-features = nix-command flakes
-> ```
->
-> **_OR_**
->
-> **Specify experimental features when using `nix run` below**
-> ```
-> nix --extra-experimental-features 'nix-command flakes' run .#<command>
-> ```
+### Profile-Based Configuration
+- **Workstation**: KDE Plasma 6, gaming (Steam, Lutris), development tools
+- **Server**: Docker, monitoring tools, SSH hardening, performance tuning
+- **Minimal**: Just SSH and essential tools
+- **VM**: Optimized for virtual machines (spice, guest tools, fast boot)
 
-> [!IMPORTANT]
->
-> If you haven't upgraded to macOS Sequioa yet, read this article: [Nix Support for macOS Sequioa](https://determinate.systems/posts/nix-support-for-macos-sequoia/).
+### Zero Runtime Detection
+- **No filesystem probing** - hardware declared explicitly
+- **No VM detection** - use vm-* configurations for VMs
+- **No conditional logic** - everything predictable
+- **Deterministic behavior** - same input = same output
 
-### 3. Initialize a starter template
-*Choose one of two options*
+## Development
 
-**Simplified version without secrets management**
-* Great for beginners, enables you to get started quickly and test out Nix.
-* Forgoing secrets just means you must configure apps that depend on keys, passwords, etc., yourself.
-* You can always add secrets later.
+### Testing Configurations
+```bash
+# Build any configuration
+nix build .#nixosConfigurations.vm-workstation.config.system.build.toplevel
 
-```sh
-mkdir -p nixos-config && cd nixos-config && nix flake --extra-experimental-features 'nix-command flakes' init -t github:anthonymoon/nixos-config#starter
-```
-**Full version with secrets management**
-* Choose this to add more moving parts for a 100% declarative configuration.
-* This template offers you a place to keep passwords, private keys, etc. *as part of your configuration*.
+# Test installer locally
+sudo ./install/install.sh vm-minimal
 
-```sh
-mkdir -p nixos-config && cd nixos-config && nix flake --extra-experimental-features 'nix-command flakes' init -t github:anthonymoon/nixos-config#starter-with-secrets
+# Development shell
+nix develop
 ```
 
-### 4. Make [apps](https://github.com/anthonymoon/nixos-config/tree/main/apps) executable
-```sh
-find apps/$(uname -m | sed 's/arm64/aarch64/')-darwin -type f \( -name apply -o -name build -o -name build-switch -o -name create-keys -o -name copy-keys -o -name check-keys -o -name rollback \) -exec chmod +x {} \;
+### Adding New Profiles
+1. Create `profiles/myprofile.nix`
+2. Add to `flake.nix` configurations
+3. Test with `nix build`
+
+### Custom Hardware
+1. Create `hardware/myhardware.nix`
+2. Add filesystem declarations
+3. Update `flake.nix` with new combinations
+
+## Migration from v1
+
+### Overview
+The new streamlined architecture eliminates the major pain points of the current configuration:
+
+- ❌ **No more template drift** - Single flake, multiple profiles
+- ❌ **No more runtime detection** - Explicit hardware declaration
+- ❌ **No more UUID confusion** - Predictable filesystem labels
+- ❌ **No more boot failures** - Rock-solid installation process
+
+### New Structure
+
+```
+nixos-config/
+├── flake-v2.nix           # New streamlined flake
+├── profiles/              # Use-case profiles
+│   ├── base.nix          # Universal foundation
+│   ├── minimal.nix       # Bare essentials
+│   ├── vm.nix           # VM optimizations
+│   ├── workstation.nix  # Desktop + gaming
+│   └── server.nix       # Headless server
+├── hardware/             # Hardware profiles
+│   ├── vm-qemu.nix      # QEMU VM hardware
+│   └── generic-uefi.nix # Physical UEFI machines
+└── install/
+    └── install.sh       # Bulletproof installer
 ```
 
-### 5. Apply your current user info
-Run this Nix command to replace stub values with your system properties, username, full name, and email.
-> Your email is only used in the `git` configuration.
-```sh
-nix run .#apply
-```
-> [!NOTE]
-> If you're using a git repository, only files in the working tree will be copied to the [Nix Store](https://zero-to-nix.com/concepts/nix-store).
->
-> You must run `git add .` first.
+### Available Configurations
 
-### 6. Decide what packages to install
-You can search for packages on the [official NixOS website](https://search.nixos.org/packages).
+| Configuration    | Hardware      | Profile     | Use Case                    |
+|-----------------|---------------|-------------|-----------------------------|
+| `vm-minimal`    | vm-qemu       | minimal     | Minimal VM for testing     |
+| `vm-workstation`| vm-qemu       | workstation | VM with full desktop       |
+| `vm-server`     | vm-qemu       | server      | VM for server workloads    |
+| `workstation`   | generic-uefi  | workstation | Physical desktop machine   |
+| `server`        | generic-uefi  | server      | Physical server machine    |
+| `minimal`       | generic-uefi  | minimal     | Minimal physical install   |
 
-**Review these files**
+### Key Improvements
 
-* [`modules/darwin/casks.nix`](https://github.com/anthonymoon/nixos-config/blob/main/modules/darwin/casks.nix)
-* [`modules/darwin/packages.nix`](https://github.com/anthonymoon/nixos-config/blob/main/modules/darwin/packages.nix)
-* [`modules/shared/packages.nix`](https://github.com/anthonymoon/nixos-config/blob/main/modules/shared/packages.nix)
+#### 1. **Predictable Filesystem Layout**
+```nix
+# Always uses labels, never UUIDs
+fileSystems."/".device = "/dev/disk/by-label/nixos";
+fileSystems."/".fsType = "ext4";
 
-### 7. Review your shell configuration
-Add anything from your existing `~/.zshrc`, or just review the new configuration.
-
-**Review these files**
-
-* [`modules/darwin/home-manager`](https://github.com/anthonymoon/nixos-config/blob/main/modules/darwin/home-manager.nix)
-* [`modules/shared/home-manager`](https://github.com/anthonymoon/nixos-config/blob/main/modules/shared/home-manager.nix)
-
-### 8. Optional: Setup secrets
-If you are using the starter with secrets, there are a few additional steps.
-
-#### 8a. Create a private Github repo to hold your secrets
-In Github, create a private [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repository with at least one file (like a `README`). You'll enter this name during installation.
-
-#### 8b. Install keys
-Before generating your first build, these keys must exist in your `~/.ssh` directory. Don't worry, I provide a few commands to help you.
-
-| Key Name            | Platform         | Description                                                                              |
-|---------------------|------------------|------------------------------------------------------------------------------------------|
-| id_ed25519          | macOS / NixOS    | Github key with access to `nix-secrets`. Not copied to host, used only during bootstrap. |
-| id_ed25519_agenix   | macOS / NixOS    | Primary key for encrypting and decrypting secrets. Copied over to host as `id_ed25519`.  |
-
-Run one of these commands:
-
-##### Copy keys from USB drive
-This command auto-detects a USB drive connected to the current system.
-> Keys must be named `id_ed25519` and `id_ed25519_agenix`.
-```sh
-nix run .#copy-keys
+fileSystems."/boot".device = "/dev/disk/by-label/boot";
+fileSystems."/boot".fsType = "vfat";
 ```
 
-##### Create new keys
-```sh
-nix run .#create-keys
+#### 2. **Layered Profile System**
 ```
-> [!NOTE]
-> If you choose this option, make sure to [save the value](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) of `id_ed25519.pub` to Github.
->
-> ```sh
-> cat /Users/$USER/.ssh/id_ed25519.pub | pbcopy # Copy key to clipboard
-> ```
-
-##### Check existing keys
-If you're rolling your own, just check they are installed correctly.
-```sh
-nix run .#check-keys
+Layer 1: base.nix         (universal foundation)
+Layer 2: hardware/*.nix   (explicit hardware)
+Layer 3: profile/*.nix    (use case: workstation/server/minimal)
+Layer 4: vm.nix          (VM optimizations, if VM config)
+Layer 5: home-manager    (user configuration)
 ```
 
-### 9. Install configuration
-Ensure the build works before deploying the configuration, run:
-```sh
+#### 3. **Zero Runtime Detection**
+- No filesystem probing
+- No hardware detection at boot
+- Everything declared explicitly
+- Deterministic behavior
+
+#### 4. **Bulletproof Installation**
+```bash
+# Interactive selection
+nix run github:anthonymoon/nixos-config#install
+
+# Direct installation
+nix run github:anthonymoon/nixos-config#install vm-workstation
+
+# Quick VM setup  
+nix run github:anthonymoon/nixos-config#install-vm
+```
+
+### Migration Process
+
+#### Phase 1: Validate New Structure
+```bash
+# Test configuration builds
+cd test-v2
+nix build .#nixosConfigurations.vm-minimal.config.system.build.toplevel
+nix build .#nixosConfigurations.workstation.config.system.build.toplevel
+```
+
+#### Phase 2: Replace Main Flake
+```bash
+# Backup current
+mv flake.nix flake-old.nix
+
+# Activate new structure
+mv flake-v2.nix flake.nix
+```
+
+#### Phase 3: Test Installation
+```bash
+# Test VM installation
+sudo nix run .#install vm-minimal
+
+# Test on physical hardware
+sudo nix run .#install workstation
+```
+
+#### Phase 4: Clean Up Legacy
+```bash
+# Remove old structure
+rm -rf templates/ apps/ hosts/ modules/
+rm flake-old.nix
+```
+
+### Benefits
+
+#### For Users
+- **Simpler installation** - Clear menu, predictable process
+- **No boot failures** - Filesystem labels eliminate UUID issues
+- **Faster setup** - No template selection confusion
+
+#### For Maintainers  
+- **Single source of truth** - No template drift
+- **Easier testing** - Build any config with `nix build`
+- **Clear architecture** - Explicit layers, no magic detection
+- **Reduced complexity** - 50% fewer files, clearer structure
+
+#### For Development
+- **Reproducible builds** - No runtime dependencies
+- **Easy customization** - Override any layer explicitly
+- **Better debugging** - No hidden detection logic
+- **Modular design** - Mix and match profiles/hardware
+
+## Support
+
+- **Installation issues**: Check that `/dev/vda` exists and is the target disk
+- **Boot failures**: Ensure using v2 installer (creates proper labels)
+- **Configuration errors**: Each profile is self-contained and bootable
+- **Development**: Use `nix develop` for testing environment
+
+## Philosophy
+
+This configuration follows the **"Explicit over Implicit"** principle:
+- Declare hardware explicitly instead of detecting at runtime
+- Use predictable identifiers instead of discovered UUIDs
+- Compose profiles instead of conditional logic
+- Fail fast and clearly instead of silent failures
+
+**Result**: A NixOS configuration that is impossible to break and trivial to understand.
+
+## Branch Protection Configuration
+
+This document outlines the required branch protection rules for the NixOS configuration repository.
+
+## Branch Protection Rules
+
+### Main Branch (Production)
+**Branch:** `main`
+
+**Settings:**
+- ✅ Restrict pushes that create files larger than 100MB
+- ✅ Require a pull request before merging
+  - ✅ Require approvals: **2** (minimum)
+  - ✅ Dismiss stale PR approvals when new commits are pushed
+  - ✅ Require review from code owners
+  - ✅ Restrict approvals to users with write access
+- ✅ Require status checks to pass before merging
+  - ✅ Require branches to be up to date before merging
+  - **Required status checks:**
+    - `validate / Validate Configuration`
+    - `integration-tests / Integration Tests`
+    - `load-tests / Load Tests`
+    - `approval-gate / Manual Approval Required`
+- ✅ Require conversation resolution before merging
+- ✅ Require signed commits
+- ✅ Require linear history
+- ✅ Include administrators (enforce for admins too)
+- ✅ Restrict force pushes
+- ✅ Allow deletions: **NO**
+
+### Staging Branch
+**Branch:** `staging`
+
+**Settings:**
+- ✅ Restrict pushes that create files larger than 100MB
+- ✅ Require a pull request before merging (only for PRs to main)
+- ✅ Require status checks to pass before merging
+  - **Required status checks:**
+    - `pre-flight / Pre-flight Checks`
+    - `integration-tests / Integration Tests`
+- ✅ Require signed commits
+- ✅ Restrict force pushes from non-admins
+- ✅ Allow deletions: **YES** (for branch management)
+
+### Dev Branch
+**Branch:** `dev`
+
+**Settings:**
+- ✅ Restrict pushes that create files larger than 100MB
+- ✅ Require status checks to pass before merging
+  - **Required status checks:**
+    - `validate / Pre-deployment Validation`
+    - `smoke-tests / Smoke Tests`
+- ✅ Allow force pushes from admins
+- ✅ Allow deletions: **YES**
+
+## Required Secrets
+
+Configure the following repository secrets:
+
+### SSH Keys
+- `DEV_VM_SSH_KEY` - SSH private key for dev VM access
+- `STAGING_VM_SSH_KEY` - SSH private key for staging VM access  
+- `PRODUCTION_SSH_KEY` - SSH private key for production bare metal access
+
+### Optional Integration Secrets
+- `CACHIX_AUTH_TOKEN` - Cachix authentication token (for faster builds)
+- `SLACK_WEBHOOK_URL` - Slack webhook for deployment notifications
+
+## Environment Protection Rules
+
+### Production Environment
+**Environment:** `production`
+
+**Settings:**
+- ✅ Required reviewers: **2** (minimum)
+- ✅ Wait timer: **5 minutes** (cooling-off period)
+- ✅ Deployment protection rules:
+  - Only deploy from `main` branch
+  - Require passing status checks
+  - Require manual approval
+
+### Production Approval Environment  
+**Environment:** `production-approval`
+
+**Settings:**
+- ✅ Required reviewers: **1** (senior team member)
+- ✅ Deployment protection rules:
+  - Only allow specific users/teams to approve
+  - Require all status checks to pass
+
+## Workflow Files Security
+
+Ensure workflow files have proper permissions:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+  checks: write
+```
+
+## Code Owners File
+
+Create `.github/CODEOWNERS`:
+
+```
+# Global ownership
+* @your-username
+
+# Critical configuration files
+/hosts/nixos/default.nix @senior-team-member @infrastructure-team
+/flake.nix @senior-team-member
+/.github/workflows/ @devops-team @senior-team-member
+
+# Security-sensitive files
+/modules/*/security/ @security-team @senior-team-member
+```
+
+## Auto-merge Configuration
+
+For automated dependency updates, configure auto-merge rules:
+
+1. Create a separate workflow for dependency PRs
+2. Allow auto-merge only for:
+   - Minor version updates
+   - Security patches
+   - After all checks pass
+   - With specific labels (e.g., `dependencies`, `auto-merge`)
+
+## Manual Setup Instructions
+
+### 1. Configure Branch Protection (GitHub UI)
+
+1. Go to **Settings** → **Branches**
+2. Add rules for each branch using settings above
+3. Ensure "Include administrators" is checked for main branch
+
+### 2. Create Environments (GitHub UI)
+
+1. Go to **Settings** → **Environments**
+2. Create `production` and `production-approval` environments
+3. Configure protection rules as specified above
+
+### 3. Add Repository Secrets (GitHub UI)
+
+1. Go to **Settings** → **Secrets and variables** → **Actions**
+2. Add all required secrets listed above
+3. Ensure secrets are properly scoped to environments
+
+### 4. Set Up Code Owners
+
+1. Create `.github/CODEOWNERS` file with appropriate team assignments
+2. Update teams/usernames to match your organization
+
+### 5. Enable Security Features
+
+1. Go to **Settings** → **Security**
+2. Enable:
+   - Dependency graph
+   - Dependabot alerts
+   - Dependabot security updates
+   - Secret scanning
+   - Code scanning (if available)
+
+## Testing the Setup
+
+After configuration, test the workflow:
+
+1. Create a feature branch
+2. Make a small change
+3. Push to `dev` branch
+4. Verify dev deployment workflow runs
+5. Check that staging promotion happens automatically
+6. Create PR from staging to main
+7. Verify all required checks run
+8. Test manual approval process
+
+The branch protection is now configured for safe, automated NixOS deployments!
+
+## CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Repository Overview
+
+This is a comprehensive NixOS/nix-darwin configuration using Nix Flakes, designed for both macOS and NixOS systems with automatic VM detection and optimization.
+
+## Essential Commands
+
+### Building and Deployment
+```bash
+# Test configuration locally
+./scripts/test-local.sh
+
+# Build configuration
 nix run .#build
-```
-> [!NOTE]
-> If you're using a git repository, only files in the working tree will be copied to the [Nix Store](https://zero-to-nix.com/concepts/nix-store).
->
-> You must run `git add .` first.
 
-> [!WARNING]
-> You may encounter `error: Unexpected files in /etc, aborting activation` if `nix-darwin` detects it will overwrite
-> an existing `/etc/` file. The error will list the files like this:
->
-> ```
-> The following files have unrecognized content and would be overwritten:
->
->   /etc/nix/nix.conf
->   /etc/bashrc
->
-> Please check there is nothing critical in these files, rename them by adding .before-nix-darwin to the end, and then try again.
-> ```
-> Backup and move the files out of the way and/or edit your Nix configuration before continuing.
-
-> [!WARNING]
-> You may encounter `error: Build user group has mismatching GID, aborting activation` if you have already upgraded to Sequoia but had not [prepared Nix](https://determinate.systems/posts/nix-support-for-macos-sequoia/) before that.
-> The error will list the files like this:
->
-> ```
-> error: Build user group has mismatching GID, aborting activation
-> The default Nix build user group ID was changed from 30000 to 350.
-> You are currently managing Nix build users with nix-darwin, but your
-> nixbld group has GID 350, whereas we expected 30000.
-> ```
->
-> You will have to [uninstall Nix](https://zero-to-nix.com/start/uninstall/), and [install Nix](https://zero-to-nix.com/start/install/) again with `--nix-build-group-id 30000` flag. See more here:
-> * [Nix Suppport for macOS Sequoia](https://determinate.systems/posts/nix-support-for-macos-sequoia/)
-> * [macOS 15 Sequoia clobbers _nixbld1-4 users](https://github.com/NixOS/nix/issues/10892)
-> * [macOS Sequoia replaces _nixbld{1,2,3,4} with system users causing darwin-rebuild to fail](https://github.com/LnL7/nix-darwin/issues/970)
-
-### 10. Make changes
-Finally, alter your system with this command:
-```sh
+# Build and switch to new generation  
 nix run .#build-switch
-```
-> [!CAUTION]
-> `~/.zshrc` will be replaced with the [`zsh` configuration](https://github.com/anthonymoon/nixos-config/blob/main/templates/starter/modules/shared/home-manager.nix#L8) from this repository. Make sure this is what you want.
 
-## For NixOS
-This configuration supports both `x86_64` and `aarch64` platforms.
-
-### 1. Burn and use the latest ISO
-Download and burn [the minimal ISO image](https://nixos.org/download.html) to a USB, or create a new VM with the ISO as base. Boot the installer.
-> If you're building a VM on an Apple Silicon Mac, choose [64-bit ARM](https://channels.nixos.org/nixos-23.05/latest-nixos-minimal-aarch64-linux.iso).
-
-**Quick Links**
-
-* [64-bit Intel/AMD](https://channels.nixos.org/nixos-23.05/latest-nixos-minimal-x86_64-linux.iso)
-* [64-bit ARM](https://channels.nixos.org/nixos-23.05/latest-nixos-minimal-aarch64-linux.iso)
-
-### 2. Optional: Setup secrets
-If you are using the starter with secrets, there are a few additional steps.
-
-#### 2a. Create a private Github repo to hold your secrets
-In Github, create a private [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repository with at least one file (like a `README`). You'll enter this name during installation.
-
-#### 2b. Install keys
-Before generating your first build, these keys must exist in your `~/.ssh` directory. Don't worry, I provide a few commands to help you.
-
-| Key Name            | Platform         | Description                                                                              |
-|---------------------|------------------|------------------------------------------------------------------------------------------|
-| id_ed25519          | macOS / NixOS    | Github key with access to `nix-secrets`. Not copied to host, used only during bootstrap. |
-| id_ed25519_agenix   | macOS / NixOS    | Primary key for encrypting and decrypting secrets. Copied over to host as `id_ed25519`.  |
-
-Run one of these commands:
-
-##### Copy keys from USB drive
-This command auto-detects a USB drive connected to the current system.
-> Keys must be named `id_ed25519` and `id_ed25519_agenix`.
-```sh
-sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#copy-keys
-```
-
-##### Create new keys
-```sh
-sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#create-keys
-```
-
-##### Check existing keys
-If you're rolling your own, just check they are installed correctly.
-```sh
-sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#check-keys
-```
-
-### 3. Install configuration
-#### Pick your template
-
-> [!IMPORTANT]
-> For Nvidia cards, select the second option, `nomodeset`, when booting the installer, or you will see a blank screen.
-
-> [!CAUTION]
-> Running this will reformat your drive to the `ext4` filesystem.
-
-**Simple**
-* Great for beginners, enables you to get started quickly and test out Nix.
-* Forgoing secrets means you must configure apps that depend on keys or passwords yourself.
-* You can always add secrets later.
-```sh
+# Fresh NixOS installation
 sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#install
+
+# Update flake inputs
+nix flake update
 ```
 
-**With secrets**
-* Choose this to add more moving parts for a 100% declarative configuration.
-* This template offers you a place to keep passwords, private keys, etc. *as part of your configuration*.
-```sh
+### Rock-Solid /dev/vda Installation
+The install scripts provide bulletproof installation for VMs and systems using /dev/vda:
+
+```bash
+# For standard installation
+sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#install
+
+# For installation with secrets
 sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#install-with-secrets
 ```
 
-### 4. Set user password
-On first boot at the login screen:
-- Use shortcut `Ctrl-Alt-F2` (or `Fn-Ctrl-Option-F2` if on a Mac) to move to a terminal session
-- Login as `root` using the password created during installation
-- Set the user password with `passwd <user>`
-- Go back to the login screen: `Ctrl-Alt-F7`
+**Installation Process:**
+1. **Robust Partitioning**: GPT with 512MB EFI (/dev/vda1) + remaining space for root (/dev/vda2)
+2. **Validation**: Multiple checks ensure partitions are created correctly
+3. **Hardware Config**: Auto-generated with UUID validation (no partition labels)
+4. **Boot Verification**: Confirms EFI bootloader installation
+5. **Configuration Validation**: Flake syntax and hardware config correctness
 
-## How to create secrets
-To create a new secret `secret.age`, first [create a `secrets.nix` file](https://github.com/ryantm/agenix#tutorial) at the root of your [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repository. Use this code:
+### Development Workflow
+1. Make changes to configuration files
+2. Run `./scripts/test-local.sh` to validate
+3. Run `nix run .#build-switch` to apply changes
+4. For fresh installs, hardware config is auto-generated
 
-> [!NOTE]
-> `secrets.nix` is interpreted by the imperative `agenix` commands to pick the "right" keys for your secrets.
->
-> Think of this file as the config file for `agenix`. It's not part of your system configuration.
+## Architecture
 
-**secrets.nix**
+### Flake Structure
+- **flake.nix**: Central hub defining inputs, outputs, and system configurations
+- **nixosConfigurations.personal**: Main personal system (x86_64-linux)
+- **apps**: Management commands (apply, build-switch, install, key management)
+- **templates**: Starter configurations for new users
+
+### Module Organization
+```
+modules/
+├── shared/           # Cross-platform (macOS/NixOS) configuration
+│   ├── packages.nix  # Common packages
+│   └── home-manager.nix  # Shared home config
+├── nixos/           # NixOS-specific configuration
+│   ├── packages.nix  # System packages
+│   └── home-manager.nix  # NixOS home config
+└── darwin/          # macOS-specific configuration
+```
+
+### Host Configuration
+- **hosts/nixos/default.nix**: Main system configuration with VM detection
+- **hosts/nixos/hardware-configuration.nix**: Auto-generated hardware config (UUIDs, filesystems)
+
+## Key Patterns
+
+### VM Detection and Optimization
+The configuration automatically detects VMs and adjusts:
+- Services (media servers disabled in VMs)
+- Network configuration (DHCP vs static)
+- Performance tuning (different sysctl parameters)
+- Storage drivers (virtio vs hardware)
+
+### Filesystem Management
+- Uses UUID-based mounting (not partition labels)
+- Hardware configuration must be generated during installation
+- Disko has been removed due to conflicts
+
+### Service Architecture
+Services are conditionally enabled based on VM detection:
 ```nix
-let
-  user1 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0idNvgGiucWgup/mP78zyC23uFjYq0evcWdjGQUaBH";
-  users = [ user1 ];
+jellyfin = {
+  enable = !isVM;
+  openFirewall = !isVM;
+};
+```
 
-  system1 = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPJDyIr/FSz1cJdcoW69R+NrWzwGK/+3gJpqD1t8L2zE";
-  systems = [ system1 ];
-in
+### Secret Management
+- Uses agenix for encrypted secrets
+- Keys stored in private git repository
+- SSH keys managed declaratively
+
+## Critical Configuration Details
+
+### Boot Issues Prevention
+The installation scripts now prevent common boot failures:
+
+**Previous Issue**: "waiting for /dev/disk/by-partlabel/disk-main-root"
+- **Root Cause**: Disko expecting partition labels while system uses UUIDs
+- **Solution Applied**: Removed disko, implemented robust UUID-based partitioning
+
+**Current Safeguards**:
+1. Hardware config always generated with UUIDs, never partition labels
+2. Multiple validation checks prevent configuration errors
+3. EFI bootloader installation verification
+4. Flake syntax validation before installation
+
+### Network Configuration
+- Bare metal: Static IP on Intel X710 interfaces
+- VMs: DHCP via NetworkManager
+- Bridge configuration for virtualization
+
+### Gaming and Performance
+- NVIDIA drivers with modesetting enabled
+- PipeWire with low-latency configuration
+- Steam with Proton and GameMode
+- nix-gaming flake for enhanced gaming packages
+
+## Testing
+
+### Local Testing Script
+`scripts/test-local.sh` runs:
+- Nix syntax checks
+- Flake evaluation
+- NixOS configuration builds
+- Code formatting (nixpkgs-fmt)
+- Static analysis (statix)
+- VM integration tests
+
+### VM Integration Tests
+Located in `tests/vm-integration.nix`:
+- Validates service startup
+- Checks configuration correctness
+- Tests network connectivity
+- Verifies package installation
+
+## Common Tasks
+
+### Adding a Package
+1. Edit `modules/nixos/packages.nix` or `modules/shared/packages.nix`
+2. Run `./scripts/test-local.sh`
+3. Apply with `nix run .#build-switch`
+
+### Modifying Services
+1. Edit `hosts/nixos/default.nix`
+2. Consider VM detection logic
+3. Test and apply changes
+
+### Updating Dependencies
+```bash
+nix flake update
+./scripts/test-local.sh
+nix run .#build-switch
+```
+
+## Important Notes
+
+- Never manually edit hardware-configuration.nix (regenerate with nixos-generate-config)
+- VM detection happens at evaluation time using /sys filesystem
+- High-performance optimizations only apply to bare metal
+- All install scripts automatically generate hardware configuration
+- Overlays in `overlays/` directory are auto-loaded
+
+## NixOS Configuration Refactor Plan
+
+## Core Principles
+1. **Single Source of Truth** - One flake, multiple profiles
+2. **Declarative Hardware** - No runtime detection, explicit configuration  
+3. **Modular Profiles** - vm, workstation, server, minimal profiles
+4. **Zero Templates** - Use profiles instead of separate templates
+5. **Bulletproof Defaults** - Safe assumptions, explicit overrides
+
+## New Structure
+
+```
+nixos-config/
+├── flake.nix                    # Single flake with all profiles
+├── profiles/
+│   ├── base.nix                # Common baseline (packages, users, etc.)
+│   ├── vm.nix                  # VM-specific optimizations
+│   ├── workstation.nix         # Gaming, desktop, media
+│   ├── server.nix              # Headless, services, networking
+│   └── minimal.nix             # Bare minimum system
+├── hardware/
+│   ├── vm-qemu.nix            # Standard QEMU VM hardware
+│   ├── vm-vmware.nix          # VMware-specific hardware
+│   ├── intel-nuc.nix          # Intel NUC hardware profile
+│   └── generic-uefi.nix       # Generic UEFI system
+├── install/
+│   └── install.sh             # Single, bulletproof installer
+└── modules/
+    ├── desktop/               # Desktop environment modules
+    ├── gaming/               # Gaming-specific modules
+    ├── server/               # Server service modules
+    └── development/          # Development tool modules
+```
+
+## Flake Structure
+
+```nix
 {
-  "secret.age".publicKeys = [ user1 system1 ];
+  outputs = { self, nixpkgs, home-manager, ... }:
+  let
+    system = "x86_64-linux";
+    
+    # Hardware + Profile combinations
+    configurations = {
+      # VM configurations
+      "vm-minimal" = { hardware = "vm-qemu"; profile = "minimal"; };
+      "vm-desktop" = { hardware = "vm-qemu"; profile = "workstation"; };
+      
+      # Workstation configurations  
+      "workstation" = { hardware = "generic-uefi"; profile = "workstation"; };
+      "gaming-rig" = { hardware = "intel-nuc"; profile = "workstation"; };
+      
+      # Server configurations
+      "server" = { hardware = "generic-uefi"; profile = "server"; };
+    };
+    
+    mkSystem = name: { hardware, profile }: nixpkgs.lib.nixosSystem {
+      inherit system;
+      modules = [
+        ./profiles/base.nix
+        ./profiles/${profile}.nix
+        ./hardware/${hardware}.nix
+        home-manager.nixosModules.home-manager
+      ];
+    };
+  in {
+    nixosConfigurations = nixpkgs.lib.mapAttrs mkSystem configurations;
+    
+    # Single installer app
+    apps.${system}.install = {
+      type = "app";
+      program = "${./install/install.sh}";
+    };
+  };
 }
 ```
-Values for `user1` should be your public key, or if you prefer to have keys attached to hosts, use the `system1` declaration.
 
-Now that we've configured `agenix` with our `secrets.nix`, it's time to create our first secret.
+## Profile-Based Approach
 
-Run the command below.
-
-```
-EDITOR=vim nix run github:ryantm/agenix -- -e secret.age
-```
-
-This opens an editor to accept, encrypt, and write your secret to disk.
-
-The command will look up the public key for `secret.age`, defined in your `secrets.nix`, and check for its private key in `~/.ssh/.`
-
-> To override the SSH path, provide the `-i` flag with a path to your `id_ed25519` key.
-
-Write your secret in the editor, save, and commit the file to your [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repo.
-
-Now we have two files: `secrets.nix` and our `secret.age`.
-
-Here's a more step-by-step example:
-
-## Secrets Example
-Let's say I wanted to create a new secret to hold my Github SSH key.
-
-I would `cd` into my [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repo directory, verify the `agenix` configuration (named `secrets.nix`) exists, then run
-```
-EDITOR=vim nix run github:ryantm/agenix -- -e github-ssh-key.age
-```
-
-This would start a `vim` session.
-
-I would enter insert mode `:i`, copy+paste the key, hit Esc and then type `:w` to save it, resulting in the creation of a new file, `github-ssh-key.age`.
-
-Then, I would edit `secrets.nix` to include a line specifying the public key to use for my new secret. I specify a user key, but I could just as easily specify a host key.
-
-**secrets.nix**
+### Base Profile (profiles/base.nix)
 ```nix
-let
-  dustin = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL0idNvgGiucWgup/mP78zyC23uFjYq0evcWdjGQUaBH";
-  users = [ dustin ];
-  systems = [ ];
-in
-{
-  "github-ssh-key.age".publicKeys = [ dustin ];
+{ pkgs, ... }: {
+  # Essential system configuration
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  
+  # Core packages everyone needs
+  environment.systemPackages = with pkgs; [ vim git curl ];
+  
+  # Standard user setup
+  users.users.nixos = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" "networkmanager" ];
+  };
+  
+  # Security defaults
+  security.sudo.wheelNeedsPassword = false;
+  networking.firewall.enable = true;
+  
+  system.stateVersion = "24.05";
 }
 ```
 
-Finally, I'd commit all changes to the [`nix-secrets`](https://github.com/anthonymoon/nix-secrets-example) repository, go back to my `nixos-config` and run `nix flake update` to update the lock file.
-
-The secret is now ready to use. Here's an [example](https://github.com/anthonymoon/nixos-config/blob/3b95252bc6facd7f61c6c68ceb1935481cb6b457/nixos/secrets.nix#L28) from my configuration. In the end, this creates a symlink to a decrypted file in the Nix Store that reflects my original file.
-
-## Making changes
-With Nix, changes to your system are made by
-- editing your system configuration
-- building the [system closure](https://zero-to-nix.com/concepts/closures)
-- creating [a new generation](https://nixos.wiki/wiki/Terms_and_Definitions_in_Nix_Project#generation) based on this closure and switching to it
-
-This is all wrapped up in the `build-switch` run command.
-
-### Development workflow
-So, in general, the workflow for managing your environment will look like
-- make changes to the configuration
-- run `nix run .#build-switch`
-- watch Nix, `nix-darwin`, `home-manager`, etc do their thing
-- go about your way and benefit from a declarative environment
-
-### Trying packages
-For quickly trying a package without installing it, I usually run
-```sh
-nix shell nixpkgs#hello
+### VM Profile (profiles/vm.nix)
+```nix
+{ ... }: {
+  # VM-specific optimizations
+  services.spice-vdagentd.enable = true;
+  services.qemuGuest.enable = true;
+  
+  # Minimal services for VMs
+  services.openssh.enable = true;
+  networking.networkmanager.enable = true;
+  
+  # Fast boot for VMs
+  systemd.services.NetworkManager-wait-online.enable = false;
+  
+  # VM-friendly settings
+  powerManagement.enable = false;
+  services.thermald.enable = false;
+}
 ```
 
-where `hello` is the package name from [nixpkgs](https://search.nixos.org/packages).
+### Hardware Profiles (hardware/vm-qemu.nix)
+```nix
+{ ... }: {
+  # Standard QEMU VM hardware
+  boot.initrd.availableKernelModules = [ "ahci" "xhci_pci" "virtio_pci" "sr_mod" "virtio_blk" ];
+  boot.kernelModules = [ ];
+  
+  # Standard VM disk layout
+  fileSystems."/".device = "/dev/disk/by-label/nixos";
+  fileSystems."/".fsType = "ext4";
+  
+  fileSystems."/boot".device = "/dev/disk/by-label/boot";
+  fileSystems."/boot".fsType = "vfat";
+  
+  # VM-optimized settings
+  nixpkgs.hostPlatform = "x86_64-linux";
+  hardware.enableAllFirmware = false;
+}
+```
 
-## Compatibility and Feedback
-### Platforms
-This configuration has been tested and confirmed to work on the following platforms:
-- Newer M1/M2/M3 Apple Silicon Macs
-- Older x86_64 (Intel) Macs
-- Bare metal x86_64 PCs
-- NixOS VMs inside VMWare on macOS
-- macOS Sonoma VMs inside Parallels on macOS
+## Bulletproof Installation
 
-### Feedback and Questions
-Have feedback or questions? Feel free to use the [discussion forum](https://github.com/anthonymoon/nixos-config/discussions).
+### Single install.sh Script
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-### Contributing
-Interested in contributing to this project? Here's how you can help:
+# Auto-detect or prompt for configuration
+select_config() {
+    echo "Available configurations:"
+    echo "1) vm-minimal     - Minimal VM setup"
+    echo "2) vm-desktop     - VM with desktop"
+    echo "3) workstation    - Full workstation setup"
+    echo "4) server         - Headless server"
+    
+    read -p "Select configuration [1-4]: " choice
+    case $choice in
+        1) echo "vm-minimal" ;;
+        2) echo "vm-desktop" ;;
+        3) echo "workstation" ;;
+        4) echo "server" ;;
+        *) echo "vm-minimal" ;;  # Safe default
+    esac
+}
 
-- **Code Contributions**: If you're interested in contributing code, please start by looking at open issues or feature requests. Fork the repository, make your changes, and submit a pull request. Make sure your code adheres to the existing style. For significant changes, consider opening an issue for discussion before starting work.
+# Bulletproof disk setup
+setup_disk() {
+    local disk="/dev/vda"
+    
+    # Partition with labels (not UUIDs for initial install)
+    parted $disk --script -- mklabel gpt
+    parted $disk --script -- mkpart ESP fat32 1MB 512MB
+    parted $disk --script -- set 1 esp on
+    parted $disk --script -- mkpart primary 512MB 100%
+    
+    # Format with predictable labels
+    mkfs.fat -F32 -n boot ${disk}1
+    mkfs.ext4 -L nixos ${disk}2
+    
+    # Mount
+    mount /dev/disk/by-label/nixos /mnt
+    mkdir -p /mnt/boot
+    mount /dev/disk/by-label/boot /mnt/boot
+}
 
-- **Reporting Bugs**: If you encounter bugs or issues, please help by reporting them. Open a GitHub Issue and include as much detail as possible: what you were doing when the bug occurred, steps to reproduce the issue, and any relevant logs or error messages.
+# Main installation
+main() {
+    local config=$(select_config)
+    
+    setup_disk
+    
+    # Generate minimal hardware config
+    nixos-generate-config --root /mnt
+    
+    # Install with selected configuration
+    nixos-install --flake "github:anthonymoon/nixos-config#${config}"
+}
 
-## Appendix
-### Why Nix Flakes
-**Reasons to jump into flakes and skip `nix-env`, Nix channels, etc**
-- Flakes work just like other package managers you already know: `npm`, `cargo`, `poetry`, `composer`, etc. Channels work more like traditional Linux distributions (like Ubuntu), which most devs don't know.
-- Flakes encapsulate not just project dependencies, but Nix expressions, Nix apps, and other configurations in a single file. It's all there in a single file. This is nice.
-- Channels lock all packages to one big global `nixpkgs` version. Flakes lock each individual package to a version, which is more precise and makes it much easier to manage overall.
-- Flakes have a growing ecosystem (see [Flake Hub](https://flakehub.com/) or [Dev Env](https://devenv.sh/)), so you're future-proofing yourself.
+main "$@"
+```
 
-### NixOS Components
+## Key Improvements
 
-| Component                   | Description                                     |
-| --------------------------- | :---------------------------------------------  |
-| **Window Manager**          | Xorg + bspwm                                    |
-| **Terminal Emulator**       | alacritty                                       |
-| **Bar**                     | polybar                                         |
-| **Application Launcher**    | rofi                                            |
-| **Notification Daemon**     | dunst                                           |
-| **Display Manager**         | lightdm                                         |
-| **File Manager**            | thunar                                          |
-| **Text Editor**             | neovim / vim                                    |
-| **Media Player**            | cider                                           |
-| **Image Viewer**            | feh                                             |
-| **Screenshot Software**     | flameshot                                       |
+### 1. **Zero Runtime Detection**
+- No filesystem probing or hardware detection
+- Explicit hardware profiles selected at install time
+- Deterministic behavior across environments
 
-### License
-This project is released under the [BSD-3-Clause license](https://github.com/anthonymoon/nixos-config/blob/main/LICENSE).
+### 2. **Predictable Labels** 
+- Use filesystem labels (`nixos`, `boot`) instead of UUIDs
+- Labels are set during partitioning, not discovered
+- Eliminates UUID/partition-label confusion
 
-### Support
-Did you find my project useful? Your support is appreciated.
+### 3. **Profile Composition**
+- `base.nix` provides foundation
+- Profile adds layer (vm, workstation, server)
+- Hardware profile defines physical characteristics
+- No conditional logic based on runtime detection
 
+### 4. **Single Install Path**
+- One installer script for all configurations
+- User selects profile at install time
+- No template complexity or version drift
 
-<a href="https://www.buymeacoffee.com/anthonymoon1" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+### 5. **Fail-Safe Defaults**
+- Every configuration includes working defaults
+- Minimal viable system in every profile
+- Progressive enhancement, not feature removal
 
-### Stars
+### 6. **Clear Separation of Concerns**
+- Hardware = physical characteristics
+- Profile = use case and services
+- Base = universal requirements
+- Modules = optional features
 
-> "All we have to decide is what to do with the time that is given us." - J.R.R. Tolkien
+## Migration Strategy
 
-[![Star History Chart](https://api.star-history.com/svg?repos=anthonymoon/nixos-config&type=Date)](https://star-history.com/#anthonymoon/nixos-config&Date)
+1. **Phase 1**: Create new structure alongside existing
+2. **Phase 2**: Port personal config to new workstation profile  
+3. **Phase 3**: Test VM profiles extensively
+4. **Phase 4**: Replace current structure entirely
+5. **Phase 5**: Update documentation and examples
+
+This approach eliminates the major pain points while maintaining all functionality in a much more maintainable structure.
+
+## Overlays
+
+Files in this directory run automatically as part of each build. Some common ways I've used overlays in the past:
+* Applying patches
+* Downloading different versions of files (locking to a version or trying a fork)
+* Workarounds and stuff I need to run temporarily
+
+Here are some previous examples.
+
+### Overriding a package with a specific hash from Github
+To get the sha256, I just made something up and tried to build it; Nix will complain with the actual sha256.
+```nix
+final: prev: {
+  picom = prev.picom.overrideAttrs (old: {
+    src = prev.fetchFromGitHub {
+      owner = "pijulius";
+      repo = "picom";
+      rev = "982bb43e5d4116f1a37a0bde01c9bda0b88705b9";
+      sha256 = "YiuLScDV9UfgI1MiYRtjgRkJ0VuA1TExATA2nJSJMhM=";
+    };
+  });
+}
+```
+
+### Override a file or attribute of a package
+In Nix, we get to just patch things willy nilly. This is an old patch I used to get the `cypress` package working; it tidied me over until a proper fix was in `nixpkgs`.
+
+```nix
+# When Cypress starts, it copies some files locally from the Nix Store, but
+# fails to remove the read-only flag.
+#
+# Luckily, the code responsible is a plain text script that we can easily patch:
+#
+final: prev: {
+  cypress = prev.cypress.overrideAttrs (oldAttrs: {
+    installPhase = let
+      matchForChrome = "yield utils_1.default.copyExtension(pathToExtension, extensionDest);";
+      appendForChrome = "yield fs_1.fs.chmodAsync(extensionBg, 0o0644);"; # We edit this line
+
+      matchForFirefox = "copyExtension(pathToExtension, extensionDest)";
+      replaceForFirefox = "copyExtension(pathToExtension, extensionDest).then(() => fs.chmodAsync(extensionBg, 0o0644))"; # We edit this line
+    in ''
+      sed -i '/${matchForChrome}a\${appendForChrome}' \
+          ./resources/app/packages/server/lib/browsers/chrome.js
+
+      sed -i 's/${matchForFirefox}/${replaceForFirefox}/' \
+          ./resources/app/packages/server/lib/browsers/utils.js
+    '' + oldAttrs.installPhase;
+  });
+}
+```

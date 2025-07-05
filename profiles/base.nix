@@ -1,5 +1,11 @@
 # Base Profile - Universal foundation for all systems
-{ config, lib, pkgs, inputs, user ? "amoon", ... }:
+{ config, lib, pkgs, ... }:
+
+  options.myUser.username = lib.mkOption {
+    type = lib.types.str;
+    default = "amoon";
+    description = "Primary user for the system.";
+  };
 
 {
   # Boot configuration - works everywhere
@@ -32,7 +38,7 @@
   i18n.defaultLocale = "en_US.UTF-8";
 
   # Essential user setup
-  users.users.${user} = {
+  users.users.${config.myUser.username} = {
     isNormalUser = true;
     description = "Primary User";
     extraGroups = [ "wheel" "networkmanager" ];

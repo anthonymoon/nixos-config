@@ -81,35 +81,5 @@
     "net.ipv4.tcp_syncookies" = 1;
   };
 
-  # Minimal home manager for server
-  # home-manager = {
-  #   useGlobalPkgs = true;
-  #   useUserPackages = true;
-  #   users.${user} = { config, pkgs, lib, ... }: {
-  #     home.stateVersion = "24.05";
-      
-  #     programs = {
-  #       git = {
-  #         enable = true;
-  #         userName = "Anthony Moon";
-  #         userEmail = "tonymoon@gmail.com";
-  #       };
-        
-  #       tmux = {
-  #         enable = true;
-  #         clock24 = true;
-  #         keyMode = "vi";
-  #       };
-        
-  #       zsh = {
-  #         enable = true;
-  #         oh-my-zsh = {
-  #           enable = true;
-  #           theme = "robbyrussell";
-  #           plugins = [ "git" "docker" "tmux" ];
-  #         };
-  #       };
-  #     };
-  #   };
-  # };
+  
 }

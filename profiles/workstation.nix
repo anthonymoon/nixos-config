@@ -92,30 +92,5 @@
   virtualisation.docker.enable = true;
   users.users.${user}.extraGroups = [ "docker" ];
 
-  # Home manager integration
-  # home-manager = {
-  #   useGlobalPkgs = true;
-  #   useUserPackages = true;
-  #   users.${user} = { config, pkgs, lib, ... }: {
-  #     home.stateVersion = "24.05";
-      
-  #     # Basic home configuration
-  #     programs = {
-  #       git = {
-  #         enable = true;
-  #         userName = "Anthony Moon";
-  #         userEmail = "tonymoon@gmail.com";
-  #       };
-        
-  #       zsh = {
-  #         enable = true;
-  #         oh-my-zsh = {
-  #           enable = true;
-  #           theme = "robbyrussell";
-  #           plugins = [ "git" "docker" ];
-  #         };
-  #       };
-  #     };
-  #   };
-  # };
+  
 }

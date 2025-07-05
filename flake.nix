@@ -3,17 +3,13 @@
   description = "Bulletproof NixOS Configuration with Profile-Based Architecture";
 
   inputs = {
-    nixpkgs.url = "github.nixos/nixpkgs/nixos-unstable";
-    # home-manager = {
-    #   url = "github.nix-community/home-manager";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
   };
 
   outputs = { self, nixpkgs, ... } @ inputs:
     let
       system = "x86_64-linux";
-      user = "amoon";
+      
       
       # All possible configurations - Hardware + Profile combinations
       configurations = {
@@ -31,7 +27,7 @@
       # Function to build a system configuration
       mkSystem = name: { hardware, profile }: nixpkgs.lib.nixosSystem {
         inherit system;
-        specialArgs = inputs // { inherit user; };
+        specialArgs = inputs; # Removed 'user' variable
         modules = [
           # Layer 1: Base foundation (always included)
           ./profiles/base.nix
@@ -43,11 +39,7 @@
           ./profiles/${profile}.nix
           
           # Layer 4: VM-specific optimizations (only for VM configs)
-        ] ++ nixpkgs.lib.optionals (nixpkgs.lib.hasPrefix "vm-" name) [
-          ./profiles/vm.nix
-          
-          # Layer 5: Home Manager integration
-          # home-manager.nixosModules.home-manager
+          # Removed conditional for vm.nix, assume it's included in profile if needed
         ];
       };
       
@@ -59,13 +51,13 @@
       apps.${system} = {
         install = {
           type = "app";
-          program = "./install/install.sh";
+          program = "${./install/install.sh}";
         };
       };
       
       # Development shell for testing
       devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
-        buildInputs = with nixpkgs.legacyPackages.${system}; [
+        buildInputs = with nixpkgs.legacyPackages.${system};
           git
           nixos-rebuild
           nix-tree
