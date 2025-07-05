@@ -31,6 +31,10 @@ in {
     # Comment these out initially if you want to start completely minimal
     ../../modules/shared
 
+    # Gaming modules from nix-gaming
+    inputs.nix-gaming.nixosModules.pipewireLowLatency
+    inputs.nix-gaming.nixosModules.platformOptimizations
+
     # Agenix for secrets management - temporarily disabled
     # inputs.agenix.nixosModules.default
   ];
@@ -129,12 +133,13 @@ in {
     forceRepaintOnResume = true;
   };
 
-  # Gaming support
+  # Gaming support with optimizations
   programs.steam = {
     enable = true;
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     gamescopeSession.enable = true;
+    platformOptimizations.enable = true;
   };
   programs.gamemode.enable = true;
   
@@ -238,11 +243,19 @@ in {
       alsa.enable      = true;
       alsa.support32Bit = true;
       pulse.enable     = true;
+      lowLatency = {
+        enable = true;
+        quantum = 64;
+        rate = 48000;
+      };
       # If you want to use JACK applications, uncomment:
       # jack.enable = true;
       # use the example session manager:
       # media-session.enable = true;
     };
+    
+    # Make pipewire realtime-capable
+    rtkit.enable = true;
 
     # Enable touchpad support (enabled by default in most desktopManager).
     # xserver.libinput.enable = true;
@@ -612,6 +625,16 @@ in {
     wl-clipboard     # Wayland clipboard utilities (replaces xclip)
     wayland-utils    # Wayland utilities
     # inputs.agenix.packages."${pkgs.system}".default  # agenix CLI (temporarily disabled)
+    
+    # Gaming packages from nix-gaming
+    inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
+    inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
+    inputs.nix-gaming.packages.${pkgs.system}.wine-mono
+    inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
+    # Try winetricks-git first, fallback to standard winetricks
+    (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
+    wine-staging  # Keep standard wine
+    dxvk          # Keep standard dxvk as fallback
   ];
 
   # Default applications and environment
@@ -734,10 +757,12 @@ in {
       trusted-users       = [ "@admin" "${user}" "root" ];
       substituters        = [
         "https://nix-community.cachix.org"
+        "https://nix-gaming.cachix.org"
         "https://cache.nixos.org"
       ];
       trusted-public-keys = [
         "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+        "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4="
       ];
       experimental-features = [ "nix-command" "flakes" ];
     };
