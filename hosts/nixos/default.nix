@@ -31,9 +31,9 @@ in {
     # Comment these out initially if you want to start completely minimal
     ../../modules/shared
 
-    # Gaming modules from nix-gaming
-    inputs.nix-gaming.nixosModules.pipewireLowLatency
-    inputs.nix-gaming.nixosModules.platformOptimizations
+    # Gaming modules from nix-gaming - temporarily disabled due to recursion
+    # inputs.nix-gaming.nixosModules.pipewireLowLatency
+    # inputs.nix-gaming.nixosModules.platformOptimizations
 
     # Agenix for secrets management - temporarily disabled
     # inputs.agenix.nixosModules.default
@@ -139,7 +139,7 @@ in {
     remotePlay.openFirewall = true;
     dedicatedServer.openFirewall = true;
     gamescopeSession.enable = true;
-    platformOptimizations.enable = true;
+    # platformOptimizations.enable = true; # Disabled due to recursion
   };
   programs.gamemode.enable = true;
   
@@ -243,11 +243,11 @@ in {
       alsa.enable      = true;
       alsa.support32Bit = true;
       pulse.enable     = true;
-      lowLatency = {
-        enable = true;
-        quantum = 64;
-        rate = 48000;
-      };
+      # lowLatency = {
+      #   enable = true;
+      #   quantum = 64;
+      #   rate = 48000;
+      # }; # Disabled due to recursion
       # If you want to use JACK applications, uncomment:
       # jack.enable = true;
       # use the example session manager:
@@ -626,13 +626,13 @@ in {
     wayland-utils    # Wayland utilities
     # inputs.agenix.packages."${pkgs.system}".default  # agenix CLI (temporarily disabled)
     
-    # Gaming packages from nix-gaming
-    inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
-    inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
-    inputs.nix-gaming.packages.${pkgs.system}.wine-mono
-    inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
+    # Gaming packages from nix-gaming - temporarily disabled due to recursion
+    # inputs.nix-gaming.packages.${pkgs.system}.dxvk-nvapi
+    # inputs.nix-gaming.packages.${pkgs.system}.vkd3d-proton
+    # inputs.nix-gaming.packages.${pkgs.system}.wine-mono
+    # inputs.nix-gaming.packages.${pkgs.system}.wineprefix-preparer
     # Try winetricks-git first, fallback to standard winetricks
-    (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
+    # (inputs.nix-gaming.packages.${pkgs.system}.winetricks-git or winetricks)
     wine-staging  # Keep standard wine
     dxvk          # Keep standard dxvk as fallback
   ];
