@@ -21,12 +21,8 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    secrets = {
-      url = "git+ssh://git@github.com/dustinlyons/nix-secrets.git";
-      flake = false;
-    };
   };
-  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix, secrets } @inputs:
+  outputs = { self, claude-desktop, home-manager, plasma-manager, nixpkgs, flake-utils, disko, agenix } @inputs:
     let
       user = "amoon";
       linuxSystems = [ "x86_64-linux" "aarch64-linux" ];
