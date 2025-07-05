@@ -223,10 +223,7 @@ in {
   };
 
   # Enable sched-ext extensible scheduler framework
-  environment.systemPackages = with pkgs; [
-    # Add scx scheduler packages when available
-    # Note: These may need to be built from source or custom overlay
-  ];
+  # SCX scheduler packages will be added to systemPackages below
 
   # Configure scx scheduler service
   systemd.services.scx-scheduler = {
@@ -507,6 +504,8 @@ in {
   environment.systemPackages = with pkgs; [
     gitAndTools.gitFull
     inetutils
+    # Add scx scheduler packages when available
+    # Note: These may need to be built from source or custom overlay
   ];
 
   system.stateVersion = "21.05"; # Don't change this
