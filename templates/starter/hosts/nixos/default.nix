@@ -25,6 +25,11 @@ in {
     # initrd.kernelModules = [ "amdgpu" ];
     kernelPackages = pkgs.linuxPackages_latest;
     kernelModules = [ "uinput" ];
+    # Kernel parameters for NVMe/SSD optimization
+    kernelParams = [
+      "scsi_mod.use_blk_mq=1"  # Enable multi-queue block layer for SCSI
+      "elevator=noop"          # Use noop I/O scheduler for SSDs
+    ];
   };
 
   # Set your time zone.
