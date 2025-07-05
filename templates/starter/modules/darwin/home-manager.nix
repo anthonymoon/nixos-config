@@ -3,9 +3,9 @@
 let
   user = "%USER%";
   # Define the content of your file as a derivation
-  myEmacsLauncher = pkgs.writeScript "emacs-launcher.command" ''
+  myNvimLauncher = pkgs.writeScript "nvim-launcher.command" ''
     #!/bin/sh
-    emacsclient -c -n &
+    alacritty -e nvim &
   '';
   sharedFiles = import ../shared/files.nix { inherit config pkgs; };
   additionalFiles = import ./files.nix { inherit user config pkgs; };
@@ -54,7 +54,7 @@ in
         file = lib.mkMerge [
           sharedFiles
           additionalFiles
-          { "emacs-launcher.command".source = myEmacsLauncher; }
+          { "nvim-launcher.command".source = myNvimLauncher; }
         ];
         stateVersion = "23.11";
       };
@@ -82,7 +82,7 @@ in
     { path = "/System/Applications/TV.app/"; }
     { path = "/System/Applications/Home.app/"; }
     {
-      path = toString myEmacsLauncher;
+      path = toString myNvimLauncher;
       section = "others";
     }
     {

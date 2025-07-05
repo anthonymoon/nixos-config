@@ -6,29 +6,22 @@ let
   xdg_stateHome  = "${config.users.users.${user}.home}/.local/state"; in
 {
 
-  # Raycast script so that "Run Emacs" is available and uses Emacs daemon
-  "${xdg_dataHome}/bin/emacsclient" = {
+  # Raycast script so that "Run Neovim" is available
+  "${xdg_dataHome}/bin/nvim" = {
     executable = true;
     text = ''
       #!/bin/zsh
       #
       # Required parameters:
       # @raycast.schemaVersion 1
-      # @raycast.title Run Emacs
+      # @raycast.title Run Neovim
       # @raycast.mode silent
       #
       # Optional parameters:
-      # @raycast.packageName Emacs
-      # @raycast.icon ${xdg_dataHome}/img/icons/Emacs.icns
-      # @raycast.iconDark ${xdg_dataHome}/img/icons/Emacs.icns
+      # @raycast.packageName Neovim
 
-      if [[ $1 = "-t" ]]; then
-        # Terminal mode
-        ${pkgs.emacs}/bin/emacsclient -t $@
-      else
-        # GUI mode
-        ${pkgs.emacs}/bin/emacsclient -c -n $@
-      fi
+      # Launch Neovim in Alacritty
+      ${pkgs.alacritty}/bin/alacritty -e ${pkgs.neovim}/bin/nvim $@
     '';
   };
 }

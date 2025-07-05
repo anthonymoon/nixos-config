@@ -48,15 +48,8 @@ let
       while ! systemctl is-active --quiet network-online.target; do sleep 1; done
       notify-send 'Network found.'
 
-      # Wait for the Emacs daemon
-      notify-send 'Starting Emacs...'
-      /run/current-system/sw/bin/emacsclient -a "" -e '(progn)' &
-
-      # Wait for Emacs daemon to be ready
-      while ! /run/current-system/sw/bin/emacsclient -e '(progn)' &>/dev/null; do
-      sleep 1
-      done
-      notify-send 'Emacs daemon started.'
+      # System startup complete
+      notify-send 'Desktop environment ready.'
     '';
   };
 
@@ -181,15 +174,9 @@ let
     super + shift + x
           /etc/profiles/per-user/${user}/bin/keepassxc
 
-    # Emacs
-    # -c flag is --create-frame
-    # -a flag is fallback to plain emacs if daemon fails
+    # Text editor
     super + alt + Return
-         emacsclient -c -a emacs
-
-    super + alt + e
-         systemctl --user restart emacs.service && \
-         emacsclient -c -a emacs
+         nvim
 
     # Web browser
     ctrl + alt + Return

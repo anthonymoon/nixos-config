@@ -23,7 +23,7 @@ Check out the step-by-step commands below to get started!
   - [Videos](#videos)
     - [macOS](#macos)
       - [Updating dependencies with one command](#updating-dependencies-with-one-command)
-      - [Instant Emacs 29 thanks to daemon mode](#instant-emacs-29-thanks-to-daemon-mode)
+      - [Fast Terminal-based Development](#fast-terminal-based-development)
     - [NixOS](#nixos)
   - [Disclaimer](#disclaimer)
   - [Layout](#layout)
@@ -71,12 +71,12 @@ Check out the step-by-step commands below to get started!
 - **Managed Homebrew**: Zero maintenance homebrew environment with `nix-darwin` and `nix-homebrew`
 - **Disk Management**: Declarative disk management with `disko`, say goodbye to disk utils
 - **Secrets Management**: Declarative secrets with `agenix` for SSH, PGP, syncthing, and other tools
-- **Super Fast Emacs**: Bleeding edge Emacs that fixes itself, thanks to a [community overlay](https://github.com/nix-community/emacs-overlay)
+- **Modern Text Editing**: Neovim with sensible defaults for efficient development
 - **Built In Home Manager**: `home-manager` module for seamless configuration (no extra clunky CLI steps)
 - **NixOS Environment**: Extensively configured NixOS including clean aesthetic + window animations
 - **Nix Overlays**: [Auto-loading of Nix overlays](https://github.com/anthonymoon/nixos-config/tree/main/overlays): drop a file in a dir and it runs _(great for patches!)_
 - **Declarative Sync**: No-fuss Syncthing: managed keys, certs, and configuration across all platforms
-- **Emacs Literate Configuration**: [Large Emacs literate configuration](https://github.com/anthonymoon/nixos-config/blob/main/modules/shared/config/emacs/config.org) to explore (if that's your thing)
+- **Vim Configuration**: Well-configured Vim and Neovim for efficient text editing
 - **Simplicity and Readability**: Optimized for simplicity and readability in all cases, not small files everywhere
 - **Backed by Continuous Integration**: Flake auto updates weekly if changes don't break starter build
 
@@ -97,7 +97,7 @@ Check out the step-by-step commands below to get started!
 #### Updating dependencies with one command
 https://github.com/anthonymoon/nixos-config/assets/1292576/2168d482-6eea-4b51-adc1-2ef1291b6598
 
-#### Instant Emacs 29 thanks to daemon mode
+#### Fast Terminal-based Development
 - **GUI**
 
 https://github.com/anthonymoon/nixos-config/assets/1292576/66001066-2bbf-4492-bc9e-60ea1abeb987
@@ -522,7 +522,7 @@ Interested in contributing to this project? Here's how you can help:
 | **Notification Daemon**     | dunst                                           |
 | **Display Manager**         | lightdm                                         |
 | **File Manager**            | thunar                                          |
-| **Text Editor**             | emacs daemon mode                               |
+| **Text Editor**             | neovim / vim                                    |
 | **Media Player**            | cider                                           |
 | **Image Viewer**            | feh                                             |
 | **Screenshot Software**     | flameshot                                       |

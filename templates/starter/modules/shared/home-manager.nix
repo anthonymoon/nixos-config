@@ -35,14 +35,9 @@ let name = "%NAME%";
       # Remove history data we don't want to see
       export HISTIGNORE="pwd:ls:cd"
 
-      # Emacs is my editor
-      export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -t"
-      export VISUAL="emacsclient -c -a emacs"
-
-      e() {
-          emacsclient -t "$@"
-      }
+      # Neovim is my editor
+      export EDITOR="nvim"
+      export VISUAL="nvim"
 
       # nix shortcuts
       shell() {
@@ -68,7 +63,7 @@ let name = "%NAME%";
     extraConfig = {
       init.defaultBranch = "main";
       core = {
-	    editor = "vim";
+	    editor = "nvim";
         autocrlf = "input";
       };
       pull.rebase = true;

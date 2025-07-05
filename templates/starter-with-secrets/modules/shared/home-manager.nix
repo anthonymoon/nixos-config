@@ -38,14 +38,9 @@ let name = "%NAME%";
       # Ripgrep alias
       alias search=rg -p --glob '!node_modules/*'  $@
 
-      # Emacs is my editor
-      export ALTERNATE_EDITOR=""
-      export EDITOR="emacsclient -t"
-      export VISUAL="emacsclient -c -a emacs"
-
-      e() {
-          emacsclient -t "$@"
-      }
+      # Neovim is my editor
+      export EDITOR="nvim"
+      export VISUAL="nvim"
 
       # nix shortcuts
       shell() {
@@ -75,7 +70,7 @@ let name = "%NAME%";
     extraConfig = {
       init.defaultBranch = "main";
       core = {
-	    editor = "vim";
+	    editor = "nvim";
         autocrlf = "input";
       };
       commit.gpgsign = true;
