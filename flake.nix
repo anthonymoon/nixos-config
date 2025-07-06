@@ -74,25 +74,31 @@
             nix-build '<nixpkgs/nixos>' -A config.system.build.isoImage -I nixos-config=${./iso.nix}
 
             # Check if build succeeded and move the result
-            if [ -f "result" ]; then # nix-build creates a direct symlink to the ISO file
+            if [ -d "result" ]; then # nix-build creates a symlink to a directory containing the ISO
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
                 # Ensure the target directory exists
                 mkdir -p "$ORIGINAL_PWD/result/iso"
-                # Copy the ISO file
-                cp result "$ORIGINAL_PWD/result/iso/nixos-custom.iso" # Give it a generic name
-                ls -la "$ORIGINAL_PWD/result/iso/nixos-custom.iso"
-                echo ""
-                echo "📋 To use the ISO:"
-                echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/nixos-custom.iso of=/dev/sdX bs=4M status=progress"
-                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/nixos-custom.iso"
-                echo ""
-                echo "🔑 SSH access:"
-                echo "  - Root user has your SSH key pre-installed"
-                echo "  - Default passwords: root='nixos', nixos='nixos'"
+                # Find the actual ISO file within the 'result' symlink and copy it
+                ISO_FILE=$(find result -name "*.iso" -print -quit)
+                if [ -n "$ISO_FILE" ]; then
+                    cp "$ISO_FILE" "$ORIGINAL_PWD/result/iso/nixos-custom.iso" # Give it a generic name
+                    ls -la "$ORIGINAL_PWD/result/iso/nixos-custom.iso"
+                    echo ""
+                    echo "📋 To use the ISO:"
+                    echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/nixos-custom.iso of=/dev/sdX bs=4M status=progress"
+                    echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/nixos-custom.iso"
+                    echo ""
+                    echo "🔑 SSH access:"
+                    echo "  - Root user has your SSH key pre-installed"
+                    echo "  - Default passwords: root='nixos', nixos='nixos'"
+                else
+                    echo "❌ Build failed! ISO file not found within result directory."
+                    exit 1
+                fi
             else
-                echo "❌ Build failed! No ISO file found."
+                echo "❌ Build failed! Result directory not found."
                 exit 1
             fi
           '');
