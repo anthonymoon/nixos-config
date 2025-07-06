@@ -175,8 +175,23 @@ install_nixos() {
     
     log "Installing NixOS with configuration: $config"
     
-    # Generate minimal hardware config (just for compatibility)
+    # Generate hardware config and create custom configuration
     nixos-generate-config --root /mnt
+    
+    # Create configuration.nix that imports our flake and hardware config
+    cat > /mnt/etc/nixos/configuration.nix << EOF
+# NixOS Configuration - DO NOT EDIT
+# This configuration imports the selected profile from the flake
+# Edit the flake profiles directly instead of this file
+{
+  imports = [
+    ./hardware-configuration.nix
+  ];
+  
+  # Use the flake configuration
+  system.configurationRevision = null;
+}
+EOF
     
     # Generate random password for user amoon (using /dev/urandom)
     local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
