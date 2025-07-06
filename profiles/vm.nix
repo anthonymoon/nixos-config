@@ -8,6 +8,9 @@
 
   # VM-specific boot modules
   boot = {
+    # LTS kernel for VM stability and mature virtio support
+    kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
+    
     initrd = {
       availableKernelModules = [ "ahci" "xhci_pci" "virtio_pci" "sr_mod" "virtio_blk" ];
       kernelModules = [ ];

@@ -8,6 +8,9 @@
   ];
   # Hardware support - generic UEFI system
   boot = {
+    # Zen kernel for gaming and desktop performance optimization
+    kernelPackages = pkgs.linuxKernel.packages.linux_zen;
+    
     initrd = {
       availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
       kernelModules = [ ];

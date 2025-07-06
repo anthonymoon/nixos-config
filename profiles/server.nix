@@ -8,6 +8,9 @@
   ];
   # Hardware support - generic UEFI system
   boot = {
+    # Hardened kernel for security-focused server deployments
+    kernelPackages = pkgs.linuxKernel.packages.linux_hardened;
+    
     initrd = {
       availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
       kernelModules = [ ];
