@@ -1,95 +1,103 @@
 # Base Profile - Universal foundation for all systems
 { config, lib, pkgs, ... }:
 
+{
   options.myUser.username = lib.mkOption {
     type = lib.types.str;
     default = "amoon";
     description = "Primary user for the system.";
   };
 
-{
-  # Boot configuration - works everywhere
-  boot = {
-    loader = {
-      systemd-boot = {
+  config = {
+    # Boot configuration - works everywhere
+    boot = {
+      loader = {
+        systemd-boot = {
+          enable = true;
+          configurationLimit = 10;
+        };
+        efi.canTouchEfiVariables = true;
+      };
+      
+      # Essential kernel modules
+      initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+      kernelModules = [ ];
+      
+      # Safe kernel parameters
+      kernelParams = [ "quiet" "loglevel=3" ];
+    };
+
+    # Networking - basic and reliable
+    networking = {
+      networkmanager.enable = true;
+      firewall.enable = true;
+      useDHCP = lib.mkDefault true;
+    };
+
+    # Locale and timezone
+    time.timeZone = lib.mkDefault "UTC";
+    i18n.defaultLocale = "en_US.UTF-8";
+
+    # Essential user setup
+    users.users.${config.myUser.username} = {
+      isNormalUser = true;
+      description = "Primary User";
+      extraGroups = [ "wheel" "networkmanager" ];
+      shell = pkgs.zsh;
+    };
+
+    # Security defaults
+    security.sudo.wheelNeedsPassword = false;
+
+    # Essential packages - minimal but functional
+    environment.systemPackages = with pkgs; [
+      vim
+      git
+      curl
+      wget
+      htop
+      tree
+      unzip
+      which
+    ];
+
+    # Essential services
+    services = {
+      openssh = {
         enable = true;
-        configurationLimit = 10;
+        settings = {
+          PasswordAuthentication = true;
+          PermitRootLogin = "no";
+        };
       };
-      efi.canTouchEfiVariables = true;
     };
-    
-    # Essential kernel modules
-    initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-    kernelModules = [ ];
-    
-    # Safe kernel parameters
-    kernelParams = [ "quiet" "loglevel=3" ];
-  };
 
-  # Networking - basic and reliable
-  networking = {
-    networkmanager.enable = true;
-    firewall.enable = true;
-    useDHCP = lib.mkDefault true;
-  };
+    # Shell configuration
+    programs.zsh.enable = true;
 
-  # Locale and timezone
-  time.timeZone = lib.mkDefault "UTC";
-  i18n.defaultLocale = "en_US.UTF-8";
-
-  # Essential user setup
-  users.users.${config.myUser.username} = {
-    isNormalUser = true;
-    description = "Primary User";
-    extraGroups = [ "wheel" "networkmanager" ];
-    shell = pkgs.zsh;
-  };
-
-  # Security defaults
-  security.sudo.wheelNeedsPassword = false;
-
-  # Essential packages - minimal but functional
-  environment.systemPackages = with pkgs; [
-    vim
-    git
-    curl
-    wget
-    htop
-    tree
-    unzip
-    which
-  ];
-
-  # Essential services
-  services = {
-    openssh = {
-      enable = true;
+    # Nix configuration
+    nix = {
       settings = {
-        PasswordAuthentication = true;
-        PermitRootLogin = "no";
+        experimental-features = [ "nix-command" "flakes" ];
+        auto-optimise-store = true;
+      };
+      gc = {
+        automatic = true;
+        dates = "weekly";
+        options = "--delete-older-than 7d";
       };
     };
-  };
 
-  # Shell configuration
-  programs.zsh.enable = true;
+    # Allow unfree packages
+    nixpkgs.config.allowUnfree = true;
 
-  # Nix configuration
-  nix = {
-    settings = {
-      experimental-features = [ "nix-command" "flakes" ];
-      auto-optimise-store = true;
+    # Secrets management directory
+    age.secrets = {
+      # Example secret configuration
+      # user-password.file = ../secrets/user-password.age;
     };
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 7d";
-    };
+
+    # State version - updated to 25.05
+    system.stateVersion = "25.05";
   };
-
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
-
-  # State version - always update this carefully
-  system.stateVersion = "24.05";
 }

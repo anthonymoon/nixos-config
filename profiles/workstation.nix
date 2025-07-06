@@ -1,5 +1,5 @@
 # Workstation Profile - Full desktop, gaming, development
-{ config, lib, pkgs, inputs, user ? "amoon", ... }:
+{ config, lib, pkgs, ... }:
 
 {
   # Desktop environment
@@ -19,7 +19,7 @@
       };
       autoLogin = {
         enable = true;
-        user = user;
+        user = config.myUser.username;
       };
       defaultSession = "plasma";
     };
@@ -90,7 +90,5 @@
 
   # Virtualization
   virtualisation.docker.enable = true;
-  users.users.${user}.extraGroups = [ "docker" ];
-
-  
+  users.users.${config.myUser.username}.extraGroups = [ "docker" ];
 }

@@ -1,17 +1,20 @@
 # Server Profile - Headless server services
-{ config, lib, pkgs, user ? "amoon", ... }:
+{ config, lib, pkgs, ... }:
 
 {
   # No desktop environment
   services.xserver.enable = false;
   
-  # Server-optimized SSH
+  # Server-optimized SSH with key-based authentication
   services.openssh = {
     enable = true;
     settings = {
-      PasswordAuthentication = false;
+      PasswordAuthentication = lib.mkForce false;
       PermitRootLogin = "no";
       X11Forwarding = false;
+      MaxAuthTries = 3;
+      ClientAliveInterval = 300;
+      ClientAliveCountMax = 2;
     };
     openFirewall = true;
   };
@@ -42,8 +45,11 @@
 
   # Server services
   services = {
-    # Automatic updates
-    automatic-timers.enable = true;
+    # Automatic updates for security
+    automatic-upgrades = {
+      enable = true;
+      allowReboot = false;
+    };
     
     # Log management
     journald.settings = {
@@ -51,16 +57,21 @@
       MaxRetentionSec = "7day";
     };
     
-    # Firewall
-    fail2ban.enable = true;
+    # Firewall protection
+    fail2ban = {
+      enable = true;
+      maxretry = 3;
+      bantime = "1h";
+    };
   };
 
   # Docker for containerized services
   virtualisation.docker = {
     enable = true;
     autoPrune.enable = true;
+    autoPrune.dates = "weekly";
   };
-  users.users.${user}.extraGroups = [ "docker" ];
+  users.users.${config.myUser.username}.extraGroups = [ "docker" ];
 
   # Server performance optimizations
   boot.kernel.sysctl = {
@@ -74,12 +85,25 @@
     "fs.file-max" = 2097152;
     "fs.inotify.max_user_watches" = 524288;
     
-    # Security
+    # Security hardening
     "net.ipv4.conf.all.rp_filter" = 1;
     "net.ipv4.conf.default.rp_filter" = 1;
     "net.ipv4.icmp_echo_ignore_broadcasts" = 1;
     "net.ipv4.tcp_syncookies" = 1;
+    "net.ipv4.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.default.accept_redirects" = 0;
+    "net.ipv4.conf.all.secure_redirects" = 0;
+    "net.ipv4.conf.default.secure_redirects" = 0;
+    "net.ipv4.conf.all.send_redirects" = 0;
+    "net.ipv4.conf.default.send_redirects" = 0;
   };
 
-  
+  # Production-ready firewall configuration
+  networking.firewall = {
+    enable = true;
+    allowedTCPPorts = [ 22 ];  # SSH only by default
+    allowedUDPPorts = [ ];
+    allowPing = false;
+    logReversePathDrops = true;
+  };
 }
