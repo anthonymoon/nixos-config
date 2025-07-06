@@ -5,15 +5,16 @@
 ## Overview
 
 A simplified NixOS configuration with just 3 profiles:
-- **vm** - Virtual machine optimized
-- **workstation** - Desktop with KDE Plasma 6, gaming, development
-- **server** - Headless server with security hardening
+- **vm** - Virtual machine optimized (Linux 6.6 LTS)
+- **workstation** - Desktop with KDE Plasma 6, gaming, development (Linux Zen)
+- **server** - Headless server with security hardening (Linux Hardened)
 
 Features:
 - Always uses GPT partitioning
 - XFS root filesystem
 - 1GB EFI partition
 - Hardware detection built into each profile
+- Optimized kernels for each use case
 
 ## Table of Contents
 
@@ -120,16 +121,33 @@ nixos-config/
 - **No template complexity**: Single installer for everything
 
 ### Profile-Based Configuration
-- **Workstation**: KDE Plasma 6, gaming (Steam, Lutris), development tools
-- **Server**: Docker, monitoring tools, SSH hardening, performance tuning
-- **Minimal**: Just SSH and essential tools
-- **VM**: Optimized for virtual machines (spice, guest tools, fast boot)
+- **VM**: Virtual machine optimized (Linux 6.6 LTS for stability, spice, guest tools)
+- **Workstation**: KDE Plasma 6, gaming (Steam, Lutris), development tools (Linux Zen for performance)
+- **Server**: Docker, monitoring tools, SSH hardening, performance tuning (Linux Hardened for security)
 
 ### Zero Runtime Detection
 - **No filesystem probing** - hardware declared explicitly
 - **No VM detection** - use vm-* configurations for VMs
 - **No conditional logic** - everything predictable
 - **Deterministic behavior** - same input = same output
+
+### Optimized Kernel Selection
+Each profile uses a kernel optimized for its specific use case:
+
+- **🖥️ VM Profile**: `linux_6_6` (LTS)
+  - Maximum stability for virtualized environments
+  - Mature virtio and KVM optimizations
+  - Predictable behavior with minimal surprises
+
+- **🎮 Workstation Profile**: `linux_zen`  
+  - Gaming performance optimizations (fsync patches)
+  - Low latency scheduler for interactive workloads
+  - Enhanced desktop responsiveness
+
+- **🔒 Server Profile**: `linux_hardened`
+  - Security-focused patches and hardening
+  - CVE mitigation and exploit protection
+  - Production-ready for security-conscious deployments
 
 ## Testing
 
@@ -146,9 +164,10 @@ This repository includes a comprehensive automated testing pipeline designed for
 
 All configurations successfully pass automated testing:
 
-- **✅ VM Configuration**: Builds and deploys successfully
-- **✅ Workstation Configuration**: Builds with gaming and development modules  
-- **✅ Server Configuration**: Builds with security and media server modules
+- **✅ VM Configuration**: Builds and deploys successfully (Linux 6.6 LTS)
+- **✅ Workstation Configuration**: Builds with gaming and development modules (Linux Zen)
+- **✅ Server Configuration**: Builds with security and media server modules (Linux Hardened)
+- **✅ Kernel Optimization**: All specialized kernels compile and function correctly
 - **✅ Module Integration**: All modules tested and functional
 - **✅ Syntax Validation**: All Nix files syntactically correct
 
