@@ -36,7 +36,7 @@
     networking = {
       networkmanager.enable = true;
       firewall.enable = true;
-      useDHCP = lib.mkDefault true;
+      useDHCP = lib.mkForce true;
     };
 
     # Locale and timezone
