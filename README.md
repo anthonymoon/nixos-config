@@ -1,17 +1,19 @@
-# 🚀 Bulletproof NixOS Configuration
+# 🚀 Simple NixOS Configuration
 
-**Zero-Failure Architecture | Profile-Based | No Runtime Detection**
+**Simplified | XFS | GPT | 3 Profiles**
 
 ## Overview
-Hey, you made it! Welcome. 🤓
 
-Nix is a powerful package manager for Linux and Unix systems that ensures reproducible, declarative, and reliable software management.
+A simplified NixOS configuration with just 3 profiles:
+- **vm** - Virtual machine optimized
+- **workstation** - Desktop with KDE Plasma 6, gaming, development
+- **server** - Headless server with security hardening
 
-This repository contains configuration for a general-purpose development environment that runs Nix on macOS, NixOS, or both simultaneously.
-
-I use it daily on my 🧑🏻‍💻 Macbook Pro and an x86 PC in my home office. It also runs as a VM on your Mac. Many others have reported that it's working for them too.
-
-Check out the step-by-step commands below to get started!
+Features:
+- Always uses GPT partitioning
+- XFS root filesystem
+- 1GB EFI partition
+- Hardware detection built into each profile
 
 ## Table of Contents
 
@@ -45,20 +47,21 @@ Check out the step-by-step commands below to get started!
 ### Installation
 ```bash
 # Interactive menu (recommended)
-sudo nix run github:anthonymoon/nixos-config#install
+sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install
 
 # Direct installation
-sudo nix run github:anthonymoon/nixos-config#install vm-workstation
-sudo nix run github:anthonymoon/nixos-config#install workstation
+sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-vm
+sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-workstation
+sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-server
 ```
 
 ### Available Configurations
 
-| Configuration    | Hardware      | Profile     | Description                    |
-|-----------------|---------------|-------------|--------------------------------|
-| `vm-minimal`    | QEMU VM       | Minimal     | Minimal VM (SSH only)         |
-| `vm-workstation`| QEMU VM       | Workstation | VM with KDE + gaming + dev     |
-| `vm-server`     | QEMU VM       | Server      | VM for server workloads       |
+| Configuration | Description                              |
+|---------------|------------------------------------------|
+| vm           | Virtual machine optimized                |
+| workstation  | Desktop with KDE Plasma 6, gaming, dev  |
+| server       | Headless server with security hardening |
 | `workstation`   | Physical UEFI | Workstation | Desktop + gaming + development |
 | `server`        | Physical UEFI | Server      | Headless server services      |
 | `minimal`       | Physical UEFI | Minimal     | Minimal physical install      |

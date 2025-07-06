@@ -1,6 +1,6 @@
-# Enterprise NixOS Configuration - Production-Ready
+# Simplified NixOS Configuration
 {
-  description = "Production-grade NixOS Configuration with Profile-Based Architecture";
+  description = "Simple NixOS Configuration - VM, Workstation, Server";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -14,38 +14,22 @@
     let
       system = "x86_64-linux";
       
-      # All possible configurations - Hardware + Profile combinations
+      # Simple configurations - just 3 types
       configurations = {
-        # VM Configurations - Perfect for testing and development
-        "vm-minimal"     = { hardware = "vm-qemu";     profile = "minimal"; };
-        "vm-workstation" = { hardware = "vm-qemu";     profile = "workstation"; };
-        "vm-server"      = { hardware = "vm-qemu";     profile = "server"; };
-        
-        # Physical Machine Configurations
-        "workstation"    = { hardware = "generic-uefi"; profile = "workstation"; };
-        "server"         = { hardware = "generic-uefi"; profile = "server"; };
-        "minimal"        = { hardware = "generic-uefi"; profile = "minimal"; };
+        "vm"          = ./profiles/vm.nix;
+        "workstation" = ./profiles/workstation.nix;
+        "server"      = ./profiles/server.nix;
       };
       
       # Function to build a system configuration
-      mkSystem = name: { hardware, profile }: nixpkgs.lib.nixosSystem {
+      mkSystem = name: config: nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = inputs;
         modules = [
-          # Layer 1: Base foundation (always included)
           ./profiles/base.nix
-          
-          # Layer 2: Hardware profile (explicit, no detection)
-          (./hardware + "/${hardware}.nix")
-          
-          # Layer 3: Use case profile (vm, workstation, server, minimal)
-          (./profiles + "/${profile}.nix")
-          
-          # Layer 4: Secrets management
+          config
           # agenix.nixosModules.default
-          
-          # Layer 5: VM-specific optimizations (conditional)
-        ] ++ (nixpkgs.lib.optional (nixpkgs.lib.hasPrefix "vm-" name) (./profiles + "/vm.nix"));
+        ];
       };
       
     in {
@@ -57,6 +41,24 @@
         install = {
           type = "app";
           program = "${./install/install.sh}";
+        };
+        install-vm = {
+          type = "app";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-vm" ''
+            ${./install/install.sh} vm
+          '');
+        };
+        install-workstation = {
+          type = "app";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-workstation" ''
+            ${./install/install.sh} workstation
+          '');
+        };
+        install-server = {
+          type = "app";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-server" ''
+            ${./install/install.sh} server
+          '');
         };
       };
       
@@ -71,11 +73,10 @@
         
         shellHook = ''
           echo "🚀 NixOS Config Development Shell"
-          echo "Available configurations:"
-          echo "${builtins.concatStringsSep "\n" (builtins.attrNames configurations)}"
+          echo "Available configurations: vm, workstation, server"
           echo ""
           echo "Test with: nix build .#nixosConfigurations.<config>.config.system.build.toplevel"
-          echo "To enable secrets: uncomment agenix module in flake.nix and add real keys to secrets/secrets.nix"
+          echo "Install with: sudo nix run .#install <config>"
         '';
       };
       

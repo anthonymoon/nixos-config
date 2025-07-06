@@ -41,20 +41,24 @@ select_config() {
         return
     fi
 
-    local configs=$(nix flake show --json ${FLAKE_URI} | jq -r '.nixosConfigurations | keys[]')
-    
     echo -e "${BLUE}Available NixOS Configurations:${NC}"
     echo "────────────────────────────────────────"
-    echo "$configs"
+    echo "vm          - Virtual machine optimized"
+    echo "workstation - Desktop with GUI and development tools"
+    echo "server      - Headless server with security hardening"
     echo "────────────────────────────────────────"
     
     while true; do
-        read -p "Select a configuration: " choice
-        if echo "$configs" | grep -wq "$choice"; then
-            echo "$choice"
-            return
-        fi
-        warn "Invalid choice. Please select one of the available configurations."
+        read -p "Select a configuration [vm/workstation/server]: " choice
+        case "$choice" in
+            vm|workstation|server)
+                echo "$choice"
+                return
+                ;;
+            *)
+                warn "Invalid choice. Please select: vm, workstation, or server"
+                ;;
+        esac
     done
 }
 
@@ -74,7 +78,7 @@ detect_disk() {
     fi
 }
 
-# Bulletproof disk partitioning
+# Simplified disk partitioning - Always GPT, XFS root, 1GB EFI
 partition_disk() {
     local disk="$1"
     
@@ -84,7 +88,7 @@ partition_disk() {
         [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
     fi
     
-    log "Partitioning $disk..."
+    log "Partitioning $disk with GPT..."
     
     # Unmount any existing mounts
     umount -R /mnt 2>/dev/null || true
@@ -96,12 +100,12 @@ partition_disk() {
     # Create GPT partition table
     parted "$disk" --script -- mklabel gpt
     
-    # Create EFI System Partition (512MB)
-    parted "$disk" --script -- mkpart ESP fat32 1MB 513MB
+    # Create 1GB EFI System Partition
+    parted "$disk" --script -- mkpart ESP fat32 1MB 1025MB
     parted "$disk" --script -- set 1 esp on
     
-    # Create root partition (remaining space)
-    parted "$disk" --script -- mkpart primary 513MB 100%
+    # Create XFS root partition (remaining space)
+    parted "$disk" --script -- mkpart primary xfs 1025MB 100%
     
     # Wait for kernel to recognize partitions
     sleep 2
@@ -115,10 +119,10 @@ partition_disk() {
     [[ -b "$boot_part" ]] || error "Boot partition $boot_part not created"
     [[ -b "$root_part" ]] || error "Root partition $root_part not created"
     
-    # Format with predictable labels (KEY: Always use labels, never UUIDs)
+    # Format filesystems - FAT32 EFI, XFS root
     log "Formatting filesystems..."
     mkfs.fat -F32 -n boot "$boot_part"
-    mkfs.ext4 -L nixos "$root_part"
+    mkfs.xfs -f -L nixos "$root_part"
     
     log "Partitioning complete ✓"
     lsblk "$disk"

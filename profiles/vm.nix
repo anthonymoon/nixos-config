@@ -1,40 +1,49 @@
-# VM Profile - Optimizations for virtual machines
-{ config, lib, pkgs, ... }:
+# VM Profile - Virtual machine optimized
+{ config, lib, pkgs, modulesPath, ... }:
 
 {
-  # VM-optimized packages
-  environment.systemPackages = with pkgs; [
-    # Base packages plus VM tools
-    spice-gtk  # For SPICE clipboard/file sharing
+  imports = [
+    (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
-  # VM-specific services
+  # VM-specific boot modules
+  boot = {
+    initrd = {
+      availableKernelModules = [ "ahci" "xhci_pci" "virtio_pci" "sr_mod" "virtio_blk" ];
+      kernelModules = [ ];
+    };
+    kernelModules = [ ];
+    extraModulePackages = [ ];
+  };
+
+  # Predictable filesystem layout using labels - XFS root
+  fileSystems."/" = {
+    device = "/dev/disk/by-label/nixos";
+    fsType = "xfs";
+  };
+
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-label/boot";
+    fsType = "vfat";
+    options = [ "fmask=0077" "dmask=0077" ];
+  };
+
+  # No swap by default
+  swapDevices = [ ];
+
+  # VM hardware settings
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.intel.updateMicrocode = false; # Not needed in VMs
+  
+  # VM optimizations
   services = {
-    # Guest agent services (already enabled in vm-qemu.nix hardware profile)
-    
-    # Faster boot for VMs
-    timesyncd.enable = false; # Not needed in VMs usually
+    spice-vdagentd.enable = true;
+    qemuGuest.enable = true;
   };
 
-  # VM performance optimizations
-  boot.kernelParams = [
-    # VM-friendly parameters
-    "elevator=noop"
-    "transparent_hugepage=never"
+  # VM-specific packages
+  environment.systemPackages = with pkgs; [
+    spice-vdagent
+    qemu-utils
   ];
-
-  # Disable hardware-specific services that don't work in VMs
-  powerManagement.enable = false;
-  services.thermald.enable = false;
-  services.pulseaudio.enable = false;
-  
-  # Fast network for VMs
-  systemd.services.NetworkManager-wait-online.enable = false;
-  
-  # VM-optimized sysctl
-  boot.kernel.sysctl = {
-    "vm.swappiness" = 1;
-    "vm.dirty_background_ratio" = 5;
-    "vm.dirty_ratio" = 10;
-  };
 }
