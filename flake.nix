@@ -3,7 +3,7 @@
   description = "Production-grade NixOS Configuration with Profile-Based Architecture";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     agenix = {
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -36,17 +36,16 @@
           ./profiles/base.nix
           
           # Layer 2: Hardware profile (explicit, no detection)
-          ./hardware/${hardware}.nix
+          (./hardware + "/${hardware}.nix")
           
           # Layer 3: Use case profile (vm, workstation, server, minimal)
-          ./profiles/${profile}.nix
+          (./profiles + "/${profile}.nix")
           
           # Layer 4: Secrets management
-          agenix.nixosModules.default
+          # agenix.nixosModules.default
           
           # Layer 5: VM-specific optimizations (conditional)
-          (nixpkgs.lib.mkIf (nixpkgs.lib.hasPrefix "vm-" name) ./profiles/vm.nix)
-        ];
+        ] ++ (nixpkgs.lib.optional (nixpkgs.lib.hasPrefix "vm-" name) (./profiles + "/vm.nix"));
       };
       
     in {

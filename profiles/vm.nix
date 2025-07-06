@@ -26,7 +26,7 @@
   # Disable hardware-specific services that don't work in VMs
   powerManagement.enable = false;
   services.thermald.enable = false;
-  hardware.pulseaudio.enable = false;
+  services.pulseaudio.enable = false;
   
   # Fast network for VMs
   systemd.services.NetworkManager-wait-online.enable = false;

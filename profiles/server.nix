@@ -52,10 +52,10 @@
   # Server services
   services = {
     # Log management
-    journald.settings = {
-      SystemMaxUse = "1G";
-      MaxRetentionSec = "7day";
-    };
+    journald.extraConfig = ''
+      SystemMaxUse=1G
+      MaxRetentionSec=7day
+    '';
     
     # Firewall protection
     fail2ban = {
