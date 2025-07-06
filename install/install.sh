@@ -132,12 +132,25 @@ partition_disk() {
 mount_filesystems() {
     log "Mounting filesystems..."
     
-    # Mount root
-    mount /dev/disk/by-label/nixos /mnt
+    # Wait for labels to appear
+    sleep 3
+    
+    # Mount root - try by label first, fallback to partition
+    if [[ -e /dev/disk/by-label/nixos ]]; then
+        mount /dev/disk/by-label/nixos /mnt
+    else
+        warn "Label not found, mounting by partition"
+        mount "${DISK}2" /mnt
+    fi
     
     # Create and mount boot
     mkdir -p /mnt/boot
-    mount /dev/disk/by-label/boot /mnt/boot
+    if [[ -e /dev/disk/by-label/boot ]]; then
+        mount /dev/disk/by-label/boot /mnt/boot
+    else
+        warn "Boot label not found, mounting by partition"
+        mount "${DISK}1" /mnt/boot
+    fi
     
     # Verify mounts
     mountpoint -q /mnt || error "Root filesystem not mounted"
