@@ -68,6 +68,9 @@
             
             # Ensure the ISO boots with networking enabled
             networking.useDHCP = true;
+            networking.useNetworkd = false;  # Use dhcpcd instead
+            networking.dhcpcd.enable = true;
+            networking.dhcpcd.wait = "background";  # Don't block boot waiting for DHCP
             
             # Include our nixos-config flake in the ISO for easy installation
             environment.etc."nixos-config-flake-uri".text = "github:anthonymoon/nixos-config";
