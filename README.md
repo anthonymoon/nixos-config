@@ -47,6 +47,30 @@ The installation process now includes integrated setup with customizable usernam
 - **System optimization**: Cleanup and store optimization
 - **Agenix integration**: Secret management system enabled
 
+## 🔨 Building Custom ISO
+
+Build a custom NixOS ISO with SSH access and your configuration:
+
+```bash
+# Build ISO (requires experimental features)
+sudo nix run --extra-experimental-features 'nix-command flakes' github:anthonymoon/nixos-config#build-iso --no-write-lock-file
+
+# The ISO will be built and available at:
+# result/iso/nixos-minimal-25.05.*.iso
+
+# Write to USB drive (replace /dev/sdX with your USB device)
+sudo dd if=result/iso/nixos-minimal-*.iso of=/dev/sdX bs=4M status=progress
+
+# Or boot in a VM
+qemu-system-x86_64 -enable-kvm -m 2048 -cdrom result/iso/nixos-minimal-*.iso
+```
+
+The custom ISO includes:
+- SSH enabled with password authentication (user: `root`/`nixos`, password: `nixos`)
+- NetworkManager for easy network setup
+- Essential tools: vim, git, curl, htop, tmux
+- Experimental Nix features enabled by default
+
 ## 📋 Profile Comparison
 
 | Profile | Kernel | Use Case | Key Features |
