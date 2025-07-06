@@ -22,5 +22,7 @@
     tree
     unzip
     which
+    ddrescue # More robust than dd for recovery
+    rsync
   ] ++ extraPackages;
 }
