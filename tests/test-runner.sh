@@ -211,11 +211,11 @@ test_vm_installation() {
     # Get latest commit hash for explicit reference
     local commit_hash=$(git rev-parse HEAD)
     
-    # Test installation command with explicit commit hash and refresh
-    if vm_exec "nix run --refresh --extra-experimental-features 'nix-command flakes' --no-write-lock-file github:anthonymoon/nixos-config/$commit_hash#post-install vm" >/dev/null 2>&1; then
-        test_pass "VM installation/post-install completed successfully"
+    # Test installation command with integrated post-install
+    if vm_exec "sudo AUTO_CONFIRM=yes nix run --refresh --extra-experimental-features 'nix-command flakes' --no-write-lock-file github:anthonymoon/nixos-config/$commit_hash#install-vm" >/dev/null 2>&1; then
+        test_pass "VM installation with integrated setup completed successfully"
     else
-        test_fail "VM installation/post-install failed"
+        test_fail "VM installation with integrated setup failed"
     fi
 }
 

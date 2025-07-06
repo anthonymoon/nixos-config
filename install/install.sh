@@ -215,6 +215,58 @@ EOF
     fi
     
     log "NixOS installation completed successfully ✓"
+    
+    # Integrated post-installation setup
+    log "Running integrated post-installation setup..."
+    
+    # Set up user shell in chroot
+    if nixos-enter --root /mnt -- command -v zsh >/dev/null 2>&1; then
+        nixos-enter --root /mnt -- chsh -s "$(nixos-enter --root /mnt -- which zsh)" amoon || warn "Failed to set zsh as default shell"
+    fi
+    
+    # Generate SSH key for user
+    if [[ ! -f /mnt/home/amoon/.ssh/id_ed25519 ]]; then
+        log "Generating SSH key for user amoon..."
+        nixos-enter --root /mnt -- sudo -u amoon mkdir -p /home/amoon/.ssh
+        nixos-enter --root /mnt -- sudo -u amoon ssh-keygen -t ed25519 -f /home/amoon/.ssh/id_ed25519 -N "" -C "amoon@nixos"
+        nixos-enter --root /mnt -- sudo -u amoon chmod 700 /home/amoon/.ssh
+        nixos-enter --root /mnt -- sudo -u amoon chmod 600 /home/amoon/.ssh/id_ed25519
+        nixos-enter --root /mnt -- sudo -u amoon chmod 644 /home/amoon/.ssh/id_ed25519.pub
+    fi
+    
+    # Configuration-specific setup
+    case "$config" in
+        "workstation")
+            log "Setting up workstation-specific configurations..."
+            nixos-enter --root /mnt -- sudo -u amoon mkdir -p /home/amoon/Development /home/amoon/Projects /home/amoon/Downloads || warn "Failed to create directories"
+            ;;
+        "server")
+            log "Setting up server-specific configurations..."
+            nixos-enter --root /mnt -- mkdir -p /var/log/custom /opt/scripts || warn "Failed to create server directories"
+            
+            # Set up logrotate for custom logs
+            nixos-enter --root /mnt -- tee /etc/logrotate.d/custom-logs >/dev/null <<'LOGROTATE_EOF'
+/var/log/custom/*.log {
+    daily
+    missingok
+    rotate 52
+    compress
+    delaycompress
+    notifempty
+    create 644 root root
+}
+LOGROTATE_EOF
+            ;;
+        "vm")
+            log "VM-specific setup completed during installation..."
+            ;;
+    esac
+    
+    # Cleanup
+    log "Cleaning up installation artifacts..."
+    nixos-enter --root /mnt -- nix-collect-garbage -d || warn "Failed to collect garbage"
+    nixos-enter --root /mnt -- nix-store --optimize || warn "Failed to optimize store"
+    
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${GREEN}  🔑 LOGIN CREDENTIALS${NC}"
@@ -223,6 +275,13 @@ EOF
     echo -e "${BLUE}Password:${NC} $password"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
+    
+    # Display SSH public key if generated
+    if [[ -f /mnt/home/amoon/.ssh/id_ed25519.pub ]]; then
+        echo -e "${BLUE}SSH Public Key (add to GitHub/servers):${NC}"
+        cat /mnt/home/amoon/.ssh/id_ed25519.pub
+        echo ""
+    fi
 }
 
 # Main installation flow

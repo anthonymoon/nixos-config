@@ -66,12 +66,6 @@
             ${./install/install.sh} server
           '');
         };
-        post-install = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "post-install-wrapper" ''
-            exec ${./scripts/post-install.sh} "$@"
-          '');
-        };
       };
       
       # Development shell for testing

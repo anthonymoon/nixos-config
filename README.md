@@ -36,14 +36,15 @@ sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-
 sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-server
 ```
 
-### Post-Installation Setup
+### Complete Installation
 
-```bash
-# Optional post-installation configuration
-nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install vm
-nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install workstation
-nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install server
-```
+The installation process now includes integrated post-installation setup:
+
+- **User setup**: Creates user 'amoon' with secure password
+- **SSH key generation**: Automatic ED25519 key creation
+- **Shell configuration**: Sets up Zsh as default shell
+- **Directory structure**: Creates profile-specific directories
+- **System optimization**: Cleanup and store optimization
 
 ## 📋 Profile Comparison
 
@@ -81,7 +82,6 @@ nixos-config/
 ├── install/
 │   └── install.sh         # Bulletproof installer with cache management
 ├── scripts/
-│   ├── post-install.sh    # Post-installation setup
 │   └── setup-vm-access.sh # SSH key setup for VMs
 └── tests/                 # Comprehensive testing automation
     ├── test-runner.sh     # Main test automation script
@@ -164,9 +164,10 @@ Automated VM setup with SSH key management:
 1. **Disk Preparation**: GPT partitioning with 1GB EFI + XFS root
 2. **Cache Clearing**: Removes stale Nix evaluation cache (user & root)
 3. **Hardware Detection**: Auto-generates hardware-configuration.nix
-4. **Password Generation**: Creates secure random password for user 'amoon'
-5. **Installation**: Uses latest flake with --refresh flag
-6. **Validation**: Comprehensive error checking at each step
+4. **System Installation**: Uses latest flake with --refresh flag
+5. **User Setup**: Creates user 'amoon' with secure password and SSH keys
+6. **Post-Setup**: Shell configuration, directories, and system optimization
+7. **Validation**: Comprehensive error checking at each step
 
 ### Filesystem Strategy
 
