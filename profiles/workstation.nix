@@ -6,6 +6,11 @@
     ../modules/gaming.nix
     ../modules/development.nix
   ];
+  
+  # Enable gaming and development features by default for workstations
+  modules.gaming.enable = true;
+  modules.development.enable = true;
+  
   # Hardware support - generic UEFI system
   boot = {
     # Zen kernel for gaming and desktop performance optimization

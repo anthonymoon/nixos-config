@@ -90,6 +90,35 @@ nixos-config/
     └── tdd-workflow.sh    # Test-driven development workflow
 ```
 
+## 📦 Module System
+
+### Default Module Behavior
+
+| Profile | Enabled Modules | Optional Modules |
+|---------|----------------|------------------|
+| **Server** | `security` (fail2ban, hardening) | `media-server` |
+| **Workstation** | `gaming`, `development` | None |
+| **VM** | None | All modules |
+
+### Customizing Modules
+
+To disable a default module or enable an optional one, add to your `/etc/nixos/configuration.nix`:
+
+```nix
+# Disable a default module
+modules.gaming.enable = false;
+
+# Enable an optional module
+modules.media-server.enable = true;
+```
+
+### Available Modules
+
+- **security**: Fail2ban, kernel hardening, AIDE (servers only)
+- **gaming**: Steam, Wine, GameMode, low-latency audio (workstations only)
+- **development**: Programming languages, databases, dev tools (workstations only)
+- **media-server**: Jellyfin, Radarr, Sonarr, Prowlarr stack (servers only)
+
 ## 🧪 Testing Automation
 
 ### Comprehensive Test Coverage

@@ -6,6 +6,11 @@
     ../modules/security.nix
     ../modules/media-server.nix
   ];
+  
+  # Enable security hardening by default for servers
+  modules.security.enable = true;
+  # Media server is optional - enable with: modules.media-server.enable = true;
+  
   # Hardware support - generic UEFI system
   boot = {
     # Hardened kernel for security-focused server deployments
