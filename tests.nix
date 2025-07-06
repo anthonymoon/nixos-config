@@ -52,6 +52,20 @@
       vm.succeed("command -v htop")
       vm.succeed("command -v git")
       vm.succeed("command -v zsh")
+
+      # Additional validation checks from automated-profile-test.sh
+      vm.succeed("nixos-version")
+      
+      profile_output = vm.succeed("grep -E \"(profile|workstation|server|vm)\" /etc/nixos/configuration.nix | head -5")
+      assert "vm" in profile_output, f"Expected 'vm' profile in configuration, got: {profile_output}"
+      
+      failed_services = vm.succeed("systemctl list-units --failed --no-legend")
+      assert "0 loaded units" in failed_services or not failed_services.strip(), f"Failed services found: {failed_services}"
+      
+      vm.succeed("df -h /")
+      vm.succeed("ip -4 addr show")
+      vm.succeed("free -h")
+      vm.succeed("nproc")
     '';
   };
   
@@ -86,6 +100,7 @@
       workstation.wait_for_unit("default.target")
       
       # Test desktop environment
+      workstation.wait_for_unit("default.target")
       workstation.wait_for_unit("display-manager.service")
       workstation.wait_for_unit("plasma-kwin_x11.service", timeout=30)
       
@@ -104,6 +119,20 @@
       # Test package availability
       workstation.succeed("command -v firefox")
       workstation.succeed("command -v git")
+
+      # Additional validation checks from automated-profile-test.sh
+      workstation.succeed("nixos-version")
+      
+      profile_output = workstation.succeed("grep -E \"(profile|workstation|server|vm)\" /etc/nixos/configuration.nix | head -5")
+      assert "workstation" in profile_output, f"Expected 'workstation' profile in configuration, got: {profile_output}"
+      
+      failed_services = workstation.succeed("systemctl list-units --failed --no-legend")
+      assert "0 loaded units" in failed_services or not failed_services.strip(), f"Failed services found: {failed_services}"
+      
+      workstation.succeed("df -h /")
+      workstation.succeed("ip -4 addr show")
+      workstation.succeed("free -h")
+      workstation.succeed("nproc")
     '';
   };
   
@@ -161,6 +190,20 @@
       output = server.succeed("stat -f / --format='%T'")
       assert "btrfs" in output, f"Expected btrfs filesystem, got: {output}"
       server.succeed("swapon --show | grep zram")
+
+      # Additional validation checks from automated-profile-test.sh
+      server.succeed("nixos-version")
+      
+      profile_output = server.succeed("grep -E \"(profile|workstation|server|vm)\" /etc/nixos/configuration.nix | head -5")
+      assert "server" in profile_output, f"Expected 'server' profile in configuration, got: {profile_output}"
+      
+      failed_services = server.succeed("systemctl list-units --failed --no-legend")
+      assert "0 loaded units" in failed_services or not failed_services.strip(), f"Failed services found: {failed_services}"
+      
+      server.succeed("df -h /")
+      server.succeed("ip -4 addr show")
+      server.succeed("free -h")
+      server.succeed("nproc")
     '';
   };
   

@@ -118,7 +118,7 @@
           echo "  nix run .#build-iso           - Build custom ISO with SSH access"
           echo "  nix flake check               - Run declarative tests"
           echo ""
-          echo "Testing: Use 'nix flake check' for integration tests"
+          echo "Testing: Run 'nix flake check' for automated integration tests"
         '';
       };
       
