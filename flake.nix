@@ -123,7 +123,7 @@
       };
       
 # Disko configuration for disk partitioning
-      diskoConfigurations.default = ./disko-config.nix;
+      diskoConfigurations.default = import ./disko-config.nix;
       
       # Integration tests using nixos-tests framework
       checks.${system} = 
