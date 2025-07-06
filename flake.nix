@@ -71,17 +71,17 @@
             trap 'rm -rf "$BUILD_DIR"' EXIT # Clean up temp directory on exit
 
             echo "📦 Starting build process in $BUILD_DIR..."
-            ISO_PATH=$(cd "$BUILD_DIR" && nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes" --print-out-paths)
+            (cd "$BUILD_DIR" && nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes")
 
             # Check if build succeeded and move the result
-            if [ -n "$ISO_PATH" ]; then
+            if [ -d "$BUILD_DIR/result" ]; then
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
                 # Ensure the result directory exists in the current working directory
                 mkdir -p result/iso
-                # Copy the ISO from the Nix store path to the desired location
-                cp "$ISO_PATH" result/iso/
+                # Find the actual ISO file and copy it
+                find "$BUILD_DIR/result" -name "*.iso" -exec cp {} result/iso/ \;
                 ls -la result/iso/*.iso
                 echo ""
                 echo "📋 To use the ISO:"
@@ -92,7 +92,7 @@
                 echo "  - Root user has your SSH key pre-installed"
                 echo "  - Default passwords: root='nixos', nixos='nixos'"
             else
-                echo "❌ Build failed! ISO path not found."
+                echo "❌ Build failed!"
                 exit 1
             fi
           '');
