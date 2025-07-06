@@ -68,7 +68,7 @@
             users.users.nixos.initialPassword = "nixos";
             
             # Ensure the ISO boots with networking enabled
-            networking.useDHCP = true;
+            networking.useDHCP = lib.mkForce true;
             networking.useNetworkd = false;  # Use dhcpcd instead
             networking.dhcpcd.enable = true;
             networking.dhcpcd.wait = "background";  # Don't block boot waiting for DHCP
