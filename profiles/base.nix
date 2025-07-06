@@ -67,13 +67,11 @@
     ];
 
     # Essential services
-    services = {
-      openssh = {
-        enable = true;
-        settings = {
-          PasswordAuthentication = true;
-          PermitRootLogin = "no";
-        };
+    services.openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = lib.mkDefault true;
+        PermitRootLogin = "no";
       };
     };
 
@@ -105,11 +103,6 @@
       priority = 100;
     };
 
-    # Secrets management directory (configured by agenix module)
-    # age.secrets = {
-    #   # Example secret configuration
-    #   # user-password.file = ../secrets/user-password.age;
-    # };
 
     # State version - updated to 25.05
     system.stateVersion = "25.05";

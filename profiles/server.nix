@@ -30,24 +30,12 @@
   # No desktop environment
   services.xserver.enable = false;
   
-  # Server-optimized SSH with key-based authentication
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = lib.mkForce false;
-      PermitRootLogin = "no";
-      X11Forwarding = false;
-      MaxAuthTries = 3;
-      ClientAliveInterval = 300;
-      ClientAliveCountMax = 2;
-    };
-    openFirewall = true;
-  };
+  # SSH configuration is handled by the security module
+  services.openssh.openFirewall = true;
 
   # Essential server packages
   environment.systemPackages = with pkgs; [
     # System monitoring
-    htop
     iotop
     nethogs
     ncdu

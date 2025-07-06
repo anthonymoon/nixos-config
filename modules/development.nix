@@ -10,7 +10,6 @@
     # Development packages
     environment.systemPackages = with pkgs; [
       # Version control
-      git
       gh
       gitui
       
@@ -51,7 +50,6 @@
       terraform
       
       # Monitoring
-      htop
       btop
       iotop
       

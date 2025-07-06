@@ -113,42 +113,40 @@
       randomizedDelaySec = "45min";
     };
     
-    # Enhanced SSH security
-    services.openssh = {
-      settings = {
-        PasswordAuthentication = false;
-        PermitRootLogin = "no";
-        X11Forwarding = false;
-        MaxAuthTries = 3;
-        ClientAliveInterval = 300;
-        ClientAliveCountMax = 2;
-        Protocol = 2;
-        
-        # Crypto hardening
-        Ciphers = [
-          "chacha20-poly1305@openssh.com"
-          "aes256-gcm@openssh.com"
-          "aes128-gcm@openssh.com"
-          "aes256-ctr"
-          "aes192-ctr"
-          "aes128-ctr"
-        ];
-        
-        KexAlgorithms = [
-          "curve25519-sha256"
-          "curve25519-sha256@libssh.org"
-          "diffie-hellman-group16-sha512"
-          "diffie-hellman-group18-sha512"
-          "diffie-hellman-group-exchange-sha256"
-        ];
-        
-        Macs = [
-          "hmac-sha2-256-etm@openssh.com"
-          "hmac-sha2-512-etm@openssh.com"
-          "hmac-sha2-256"
-          "hmac-sha2-512"
-        ];
-      };
+    # Enhanced SSH security - only when security module is enabled
+    services.openssh.settings = {
+      PasswordAuthentication = lib.mkForce false;
+      PermitRootLogin = "no";
+      X11Forwarding = false;
+      MaxAuthTries = 3;
+      ClientAliveInterval = 300;
+      ClientAliveCountMax = 2;
+      Protocol = 2;
+      
+      # Crypto hardening
+      Ciphers = [
+        "chacha20-poly1305@openssh.com"
+        "aes256-gcm@openssh.com"
+        "aes128-gcm@openssh.com"
+        "aes256-ctr"
+        "aes192-ctr"
+        "aes128-ctr"
+      ];
+      
+      KexAlgorithms = [
+        "curve25519-sha256"
+        "curve25519-sha256@libssh.org"
+        "diffie-hellman-group16-sha512"
+        "diffie-hellman-group18-sha512"
+        "diffie-hellman-group-exchange-sha256"
+      ];
+      
+      Macs = [
+        "hmac-sha2-256-etm@openssh.com"
+        "hmac-sha2-512-etm@openssh.com"
+        "hmac-sha2-256"
+        "hmac-sha2-512"
+      ];
     };
     
     # Log monitoring

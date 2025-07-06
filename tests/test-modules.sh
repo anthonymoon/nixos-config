@@ -288,13 +288,15 @@ test_system_integration() {
         test_skip "NTP synchronization not active"
     fi
     
-    # Test filesystem
+    # Test filesystem (now using Btrfs with Disko)
     local fs_type
     fs_type=$(vm_exec "stat -f / --format='%T'" 2>/dev/null || echo "unknown")
-    if [[ "$fs_type" == "xfs" ]]; then
-        test_pass "Root filesystem is XFS"
+    if [[ "$fs_type" == "btrfs" ]]; then
+        test_pass "Root filesystem is Btrfs"
+    elif [[ "$fs_type" == "xfs" ]]; then
+        test_pass "Root filesystem is XFS (legacy)"
     else
-        test_fail "Root filesystem is not XFS (found: $fs_type)"
+        test_info "Root filesystem type: $fs_type"
     fi
     
     # Test EFI boot

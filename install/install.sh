@@ -113,14 +113,14 @@ install_nixos() {
     log "Installing NixOS with configuration: $config"
     log "Setting up user: $user"
     
-    # Generate hardware config (Disko will have already created the basic structure)
+    # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
     
     # Generate random password for user (using /dev/urandom)
     local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
     
-    # Hash password using mkpasswd from whois package
-    local password_hash=$(nix-shell -p whois --run "echo '$password' | mkpasswd -m sha-512 -s")
+    # Hash password using modern nix run approach
+    local password_hash=$(nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s <<< "$password")
     
     # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
@@ -136,9 +136,6 @@ install_nixos() {
   users.users.$user = {
     hashedPassword = "$password_hash";
   };
-  
-  # Use the flake configuration
-  system.configurationRevision = null;
 }
 EOF
     
