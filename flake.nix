@@ -70,6 +70,8 @@
             ORIGINAL_PWD="$(pwd)"
 
             echo "📦 Starting build process..."
+            # Clean up any previous result symlink/directory
+            rm -rf result
             # Run nix build directly in the current directory. This will create a 'result' symlink here.
             nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes"
 
