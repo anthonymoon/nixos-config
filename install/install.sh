@@ -176,12 +176,35 @@ install_nixos() {
     # Generate minimal hardware config (just for compatibility)
     nixos-generate-config --root /mnt
     
+    # Generate random password for user amoon
+    local password=$(openssl rand -base64 12 | tr -d '+/=' | head -c 8)
+    local password_hash=$(openssl passwd -6 "$password")
+    
+    # Create temporary configuration to set password
+    cat > /mnt/etc/nixos/user-config.nix << EOF
+# Temporary user configuration
+{ config, lib, pkgs, ... }:
+{
+  users.users.amoon = {
+    hashedPassword = "$password_hash";
+  };
+}
+EOF
+    
     # Install with selected configuration
     if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd; then
         error "NixOS installation failed"
     fi
     
     log "NixOS installation completed successfully ✓"
+    echo ""
+    echo -e "${GREEN}═══════════════════════════════════════${NC}"
+    echo -e "${GREEN}  🔑 LOGIN CREDENTIALS${NC}"
+    echo -e "${GREEN}═══════════════════════════════════════${NC}"
+    echo -e "${BLUE}Username:${NC} amoon"
+    echo -e "${BLUE}Password:${NC} $password"
+    echo -e "${GREEN}═══════════════════════════════════════${NC}"
+    echo ""
 }
 
 # Main installation flow

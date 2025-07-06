@@ -2,6 +2,10 @@
 { config, lib, pkgs, ... }:
 
 {
+  imports = [
+    # Import user configuration if it exists (created during installation)
+  ] ++ lib.optional (builtins.pathExists /etc/nixos/user-config.nix) /etc/nixos/user-config.nix;
+
   options.myUser.username = lib.mkOption {
     type = lib.types.str;
     default = "amoon";
