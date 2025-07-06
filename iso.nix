@@ -3,7 +3,6 @@ let
   extraPackages = []; # Define extraPackages locally if not passed as an argument
 in
 {
-{
   imports = [
     <nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix>
 
