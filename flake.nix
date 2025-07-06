@@ -62,14 +62,26 @@
             set -euo pipefail
             echo "🔨 Building custom NixOS ISO with SSH access..."
             echo "================================================"
-            cd ${./.}/iso
-            echo "📦 Starting build process..."
-            nix build . --extra-experimental-features "nix-command flakes"
-            
-            if [ -d "result" ]; then
+
+            # Get the absolute path to the iso flake
+            ISO_FLAKE_PATH="${self}/iso"
+
+            # Create a temporary directory for the build
+            BUILD_DIR=$(mktemp -d)
+            trap 'rm -rf "$BUILD_DIR"' EXIT # Clean up temp directory on exit
+
+            echo "📦 Starting build process in $BUILD_DIR..."
+            (cd "$BUILD_DIR" && nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes")
+
+            # Check if build succeeded and move the result
+            if [ -d "$BUILD_DIR/result" ]; then
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
+                # Ensure the result directory exists in the current working directory
+                mkdir -p result/iso
+                # Move the actual ISO file, not the symlink
+                find "$BUILD_DIR/result" -name "*.iso" -exec mv {} result/iso/ \;
                 ls -la result/iso/*.iso
                 echo ""
                 echo "📋 To use the ISO:"
