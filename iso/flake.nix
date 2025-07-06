@@ -65,7 +65,9 @@
             
             # Set a default password for root (can be changed after boot)
             users.users.root.initialPassword = "nixos";
+            users.users.root.initialHashedPassword = null;
             users.users.nixos.initialPassword = "nixos";
+            users.users.nixos.initialHashedPassword = null;
             
             # Ensure the ISO boots with networking enabled
             networking.useDHCP = lib.mkForce true;
