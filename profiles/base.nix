@@ -91,11 +91,11 @@
     # Allow unfree packages
     nixpkgs.config.allowUnfree = true;
 
-    # Secrets management directory
-    age.secrets = {
-      # Example secret configuration
-      # user-password.file = ../secrets/user-password.age;
-    };
+    # Secrets management directory (configured by agenix module)
+    # age.secrets = {
+    #   # Example secret configuration
+    #   # user-password.file = ../secrets/user-password.age;
+    # };
 
     # State version - updated to 25.05
     system.stateVersion = "25.05";

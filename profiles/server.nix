@@ -43,14 +43,14 @@
     rclone
   ];
 
+  # Automatic updates for security
+  system.autoUpgrade = {
+    enable = true;
+    allowReboot = false;
+  };
+
   # Server services
   services = {
-    # Automatic updates for security
-    automatic-upgrades = {
-      enable = true;
-      allowReboot = false;
-    };
-    
     # Log management
     journald.settings = {
       SystemMaxUse = "1G";
