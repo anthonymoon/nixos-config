@@ -69,22 +69,19 @@
             # Store the original working directory
             ORIGINAL_PWD="$(pwd)"
 
-            # Create a temporary directory for the build
-            BUILD_DIR=$(mktemp -d)
-            trap 'rm -rf "$BUILD_DIR"' EXIT # Clean up temp directory on exit
-
-            echo "📦 Starting build process in $BUILD_DIR..."
-            (cd "$BUILD_DIR" && nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes")
+            echo "📦 Starting build process..."
+            # Run nix build directly in the current directory. This will create a 'result' symlink here.
+            nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes"
 
             # Check if build succeeded and move the result
-            if [ -d "$BUILD_DIR/result" ]; then
+            if [ -d "result" ]; then
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
-                # Ensure the result directory exists in the original working directory
+                # Ensure the target directory exists
                 mkdir -p "$ORIGINAL_PWD/result/iso"
-                # Find the actual ISO file and copy it to the original working directory
-                find "$BUILD_DIR/result" -name "*.iso" -exec cp {} "$ORIGINAL_PWD/result/iso/" \;
+                # Find the actual ISO file within the 'result' symlink and copy it
+                find "result" -name "*.iso" -exec cp {} "$ORIGINAL_PWD/result/iso/" \;
                 ls -la "$ORIGINAL_PWD/result/iso/*.iso"
                 echo ""
                 echo "📋 To use the ISO:"
