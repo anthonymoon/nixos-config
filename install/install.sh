@@ -176,9 +176,11 @@ install_nixos() {
     # Generate minimal hardware config (just for compatibility)
     nixos-generate-config --root /mnt
     
-    # Generate random password for user amoon
-    local password=$(openssl rand -base64 12 | tr -d '+/=' | head -c 8)
-    local password_hash=$(openssl passwd -6 "$password")
+    # Generate random password for user amoon (using /dev/urandom)
+    local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
+    
+    # Hash password using mkpasswd from whois package
+    local password_hash=$(nix-shell -p whois --run "echo '$password' | mkpasswd -m sha-512 -s")
     
     # Create temporary configuration to set password
     cat > /mnt/etc/nixos/user-config.nix << EOF
