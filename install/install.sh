@@ -87,7 +87,7 @@ setup_disko() {
     
     # Run Disko to partition and mount the disk
     # This will use the disko-config.nix for auto-detection and Btrfs setup
-    if ! nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file "${FLAKE_URI}#disko" -- --mode disko "${FLAKE_URI}#diskoConfigurations.default"; then
+    if ! nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file "${FLAKE_URI}#disko" -- --mode disko --flake "${FLAKE_URI}" diskoConfigurations.default; then
         error "Disko partitioning failed"
     fi
     
