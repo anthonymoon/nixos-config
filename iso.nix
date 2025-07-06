@@ -5,10 +5,8 @@ in
 {
   imports = [
     <nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix>
-
-    # Provide an initial copy of the NixOS channel so that the user
-    # doesn't need to run "nix-channel --update" first.
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
+    <nixpkgs/nixos/modules/installer/cd-dvd/iso-image.nix> # Import iso-image module
   ];
 
   isoImage.size = "2G"; # Increase ISO image size
