@@ -10,6 +10,9 @@ in
     # doesn't need to run "nix-channel --update" first.
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
   ];
+
+  isoImage.size = "2G"; # Increase ISO image size
+
   environment.systemPackages = with pkgs; [
     neovim
     openssh # For scp
