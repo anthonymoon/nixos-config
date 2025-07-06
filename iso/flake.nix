@@ -12,7 +12,7 @@
       customIso = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
-          ({ pkgs, modulesPath, ... }: {
+          ({ pkgs, modulesPath, lib, ... }: {
             imports = [ 
               (modulesPath + "/installer/cd-dvd/installation-cd-minimal.nix")
               (modulesPath + "/installer/cd-dvd/channel.nix")
