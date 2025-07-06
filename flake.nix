@@ -87,9 +87,9 @@
       };
       
       # Expose configurations for easy access
-      packages.${system} = nixpkgs.lib.mapAttrs' (name: config: {
+      packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {
         name = "nixos-${name}";
-        value = config.config.system.build.toplevel;
-      }) self.nixosConfigurations;
+        value = (mkSystem name configurations.${name}).config.system.build.toplevel;
+      }) configurations;
     };
 }
