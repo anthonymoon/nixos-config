@@ -63,38 +63,36 @@
             echo "🔨 Building custom NixOS ISO with SSH access..."
             echo "================================================"
 
-            # Get the absolute path to the iso flake
-            ISO_FLAKE_PATH="${self}/iso"
-
             # Store the original working directory
             ORIGINAL_PWD="$(pwd)"
 
             echo "📦 Starting build process..."
             # Clean up any previous result symlink/directory
             rm -rf result
-            # Run nix build directly in the current directory. This will create a 'result' symlink here.
-            nix build "$ISO_FLAKE_PATH#packages.${system}.default" --extra-experimental-features "nix-command flakes"
+
+            # Build the ISO using nix-build
+            nix-build '<nixpkgs/nixos>' -A config.system.build.isoImage -I nixos-config=${./iso.nix}
 
             # Check if build succeeded and move the result
-            if [ -d "result" ]; then
+            if [ -f "result" ]; then # nix-build creates a direct symlink to the ISO file
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
                 # Ensure the target directory exists
                 mkdir -p "$ORIGINAL_PWD/result/iso"
-                # Find the actual ISO file within the 'result' symlink and copy it
-                find "result" -name "*.iso" -exec cp {} "$ORIGINAL_PWD/result/iso/" \;
-                ls -la "$ORIGINAL_PWD/result/iso/*.iso"
+                # Copy the ISO file
+                cp result "$ORIGINAL_PWD/result/iso/nixos-custom.iso" # Give it a generic name
+                ls -la "$ORIGINAL_PWD/result/iso/nixos-custom.iso"
                 echo ""
                 echo "📋 To use the ISO:"
-                echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/*.iso of=/dev/sdX bs=4M status=progress"
-                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/*.iso"
+                echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/nixos-custom.iso of=/dev/sdX bs=4M status=progress"
+                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/nixos-custom.iso"
                 echo ""
                 echo "🔑 SSH access:"
                 echo "  - Root user has your SSH key pre-installed"
                 echo "  - Default passwords: root='nixos', nixos='nixos'"
             else
-                echo "❌ Build failed!"
+                echo "❌ Build failed! No ISO file found."
                 exit 1
             fi
           '');
