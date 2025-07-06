@@ -170,7 +170,7 @@ test_flake_evaluation() {
     
     # Test each configuration builds
     for config in vm workstation server; do
-        if nix build --no-link --dry-run --no-write-lock-file ".#nixosConfigurations.$config.config.system.build.toplevel" >/dev/null 2>&1; then
+        if nix --extra-experimental-features "nix-command flakes" build --no-link --dry-run --no-write-lock-file ".#nixosConfigurations.$config.config.system.build.toplevel" >/dev/null 2>&1; then
             test_pass "Configuration '$config' builds successfully"
         else
             test_fail "Configuration '$config' failed to build"

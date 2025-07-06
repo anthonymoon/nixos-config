@@ -94,11 +94,14 @@
     # Steam controller udev rules
     services.udev.packages = [ pkgs.steam ];
     
-    # Low latency audio configuration
-    services.pipewire.lowLatency = {
-      enable = true;
-      quantum = 64;
-      rate = 48000;
+    # Low latency audio configuration (if supported)
+    services.pipewire.extraConfig.pipewire."92-low-latency" = {
+      "context.properties" = {
+        "default.clock.rate" = 48000;
+        "default.clock.quantum" = 64;
+        "default.clock.min-quantum" = 64;
+        "default.clock.max-quantum" = 64;
+      };
     };
   };
 }

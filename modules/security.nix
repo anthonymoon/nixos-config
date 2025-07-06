@@ -159,21 +159,8 @@
       ForwardToSyslog=yes
     '';
     
-    # Intrusion detection
-    services.aide = {
-      enable = true;
-      config = ''
-        database=file:/var/lib/aide/aide.db
-        database_out=file:/var/lib/aide/aide.db.new
-        gzip_dbout=yes
-        
-        # Rules
-        /bin FIPSR
-        /sbin FIPSR
-        /usr/bin FIPSR
-        /usr/sbin FIPSR
-        /etc FIPSR
-      '';
-    };
+    # AIDE configuration (manual setup required)
+    # AIDE is included in the main systemPackages list above
+    # Run: sudo aide --init && sudo mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
   };
 }
