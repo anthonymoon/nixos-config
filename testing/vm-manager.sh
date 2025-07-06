@@ -10,7 +10,7 @@ VM_MEMORY="4096"
 VM_DISK_SIZE="20G"
 VM_NETWORK="default"
 BASE_SNAPSHOT="clean-installer-state"
-NIXOS_ISO_URL="https://channels.nixos.org/nixos-25.05/latest-nixos-minimal-x86_64-linux.iso"
+NIXOS_ISO_PATH="$HOME/latest-nixos-graphical-x86_64-linux.iso"
 WORK_DIR="/tmp/nixos-testing"
 
 # Color output
@@ -47,17 +47,14 @@ check_prerequisites() {
     log "Prerequisites checked ✓"
 }
 
-# Download NixOS ISO if needed
+# Use existing NixOS ISO from home directory
 ensure_iso() {
-    local iso_path="$WORK_DIR/nixos-installer.iso"
-    
-    if [[ ! -f "$iso_path" ]]; then
-        log "Downloading NixOS installer ISO..."
-        wget -O "$iso_path" "$NIXOS_ISO_URL" || error "Failed to download ISO"
+    if [[ ! -f "$NIXOS_ISO_PATH" ]]; then
+        error "NixOS ISO not found at $NIXOS_ISO_PATH"
     fi
     
-    log "ISO available at $iso_path"
-    echo "$iso_path"
+    log "Using existing ISO: $NIXOS_ISO_PATH"
+    echo "$NIXOS_ISO_PATH"
 }
 
 # Create base VM if it doesn't exist
