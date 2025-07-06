@@ -20,8 +20,7 @@
   };
 
   # Filesystem configuration handled by Disko
-  # No swap devices - using ZRAM from base profile  
-  swapDevices = [ ];
+  # No swap devices - using ZRAM from base profile
 
   # Hardware settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
@@ -99,4 +98,11 @@
     gaming.enable = true;
     development.enable = true;
   };
+
+  # Workstation-specific directory setup
+  systemd.tmpfiles.rules = [
+    "d /home/${config.myUser.username}/Development 0755 ${config.myUser.username} users -"
+    "d /home/${config.myUser.username}/Projects 0755 ${config.myUser.username} users -"
+    "d /home/${config.myUser.username}/Downloads 0755 ${config.myUser.username} users -"
+  ];
 }

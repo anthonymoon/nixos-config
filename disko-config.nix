@@ -5,17 +5,39 @@
     disk = {
       main = {
         type = "disk";
-        # Use a simple heuristic for the first available disk
-        # This will be the first /dev/vda, /dev/sda, /dev/nvme0n1, etc.
-        device = builtins.head (
-          builtins.filter (disk: builtins.pathExists disk) [
-            "/dev/vda"      # QEMU/KVM virtual disk (most common)
-            "/dev/sda"      # SATA/SCSI disk
-            "/dev/nvme0n1"  # NVMe disk
-            "/dev/xvda"     # Xen virtual disk
-            "/dev/hda"      # IDE disk (legacy)
-          ]
-        );
+        # Robust disk detection using /dev/disk/by-id for stable device naming
+        # Falls back to /dev path detection if by-id is not available
+        device = 
+          let
+            # Try to find disks by stable ID first (best practice)
+            diskByIdPath = "/dev/disk/by-id";
+            diskIds = if builtins.pathExists diskByIdPath 
+              then builtins.attrNames (builtins.readDir diskByIdPath)
+              else [];
+            
+            # Filter for main disks (not partitions) by common patterns
+            isMainDisk = id: 
+              (builtins.match ".*(nvme|ata|scsi|virtio|usb).*" id != null) &&
+              (builtins.match ".*-part[0-9]+.*" id == null);
+            
+            mainDisks = builtins.filter isMainDisk diskIds;
+            
+            # Fallback device paths if by-id detection fails
+            fallbackDevices = [
+              "/dev/vda"      # QEMU/KVM virtual disk (most common)
+              "/dev/sda"      # SATA/SCSI disk  
+              "/dev/nvme0n1"  # NVMe disk
+              "/dev/xvda"     # Xen virtual disk
+              "/dev/hda"      # IDE disk (legacy)
+            ];
+            
+            availableFallbacks = builtins.filter builtins.pathExists fallbackDevices;
+          in
+            if mainDisks != [] 
+            then "/dev/disk/by-id/${builtins.head mainDisks}"
+            else if availableFallbacks != []
+            then builtins.head availableFallbacks
+            else builtins.abort "No suitable disk found for installation";
         content = {
           type = "gpt";
           partitions = {

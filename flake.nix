@@ -81,6 +81,17 @@
 # Disko configuration for disk partitioning
       diskoConfigurations.default = ./disko-config.nix;
       
+      # Integration tests using nixos-tests framework
+      checks.${system} = 
+        let
+          testSuite = import ./tests.nix { inherit pkgs lib; };
+        in {
+          vm-test = testSuite.vm-test;
+          workstation-test = testSuite.workstation-test;
+          server-test = testSuite.server-test;
+          network-test = testSuite.network-test;
+        };
+
       # Expose configurations for easy access
       packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {
         name = "nixos-${name}";

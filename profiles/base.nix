@@ -49,6 +49,9 @@
       description = "Primary User";
       extraGroups = [ "wheel" "networkmanager" ];
       shell = pkgs.zsh;
+      # Create SSH directory structure
+      openssh.authorizedKeys.keys = [ ];
+      createHome = true;
     };
 
     # Security defaults
@@ -77,6 +80,38 @@
 
     # Shell configuration
     programs.zsh.enable = true;
+
+    # Automatic SSH key generation service
+    systemd.services.generate-user-ssh-key = {
+      description = "Generate SSH key for user on first boot";
+      wantedBy = [ "multi-user.target" ];
+      after = [ "local-fs.target" ];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        User = config.myUser.username;
+        Group = "users";
+        ExecStart = pkgs.writeShellScript "generate-ssh-key" ''
+          set -euo pipefail
+          
+          SSH_DIR="/home/${config.myUser.username}/.ssh"
+          SSH_KEY="$SSH_DIR/id_ed25519"
+          
+          # Only generate if key doesn't exist
+          if [[ ! -f "$SSH_KEY" ]]; then
+            echo "Generating SSH key for ${config.myUser.username}..."
+            mkdir -p "$SSH_DIR"
+            ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "${config.myUser.username}@nixos"
+            chmod 700 "$SSH_DIR"
+            chmod 600 "$SSH_KEY"
+            chmod 644 "$SSH_KEY.pub"
+            echo "SSH key generated successfully"
+          else
+            echo "SSH key already exists, skipping generation"
+          fi
+        '';
+      };
+    };
 
     # Nix configuration
     nix = {

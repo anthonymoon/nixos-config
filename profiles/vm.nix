@@ -21,7 +21,6 @@
 
   # Filesystem configuration handled by Disko
   # No swap devices - using ZRAM from base profile
-  swapDevices = [ ];
 
   # VM hardware settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";

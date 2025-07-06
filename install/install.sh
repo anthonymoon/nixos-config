@@ -151,56 +151,10 @@ EOF
     
     log "NixOS installation completed successfully ✓"
     
-    # Integrated post-installation setup
-    log "Running integrated post-installation setup..."
-    
-    # Set up user shell in chroot
-    if nixos-enter --root /mnt -- command -v zsh >/dev/null 2>&1; then
-        nixos-enter --root /mnt -- chsh -s "$(nixos-enter --root /mnt -- which zsh)" "$user" || warn "Failed to set zsh as default shell"
-    fi
-    
-    # Generate SSH key for user
-    if [[ ! -f "/mnt/home/$user/.ssh/id_ed25519" ]]; then
-        log "Generating SSH key for user $user..."
-        nixos-enter --root /mnt -- sudo -u "$user" mkdir -p "/home/$user/.ssh"
-        nixos-enter --root /mnt -- sudo -u "$user" ssh-keygen -t ed25519 -f "/home/$user/.ssh/id_ed25519" -N "" -C "$user@nixos"
-        nixos-enter --root /mnt -- sudo -u "$user" chmod 700 "/home/$user/.ssh"
-        nixos-enter --root /mnt -- sudo -u "$user" chmod 600 "/home/$user/.ssh/id_ed25519"
-        nixos-enter --root /mnt -- sudo -u "$user" chmod 644 "/home/$user/.ssh/id_ed25519.pub"
-    fi
-    
-    # Configuration-specific setup
-    case "$config" in
-        "workstation")
-            log "Setting up workstation-specific configurations..."
-            nixos-enter --root /mnt -- sudo -u "$user" mkdir -p "/home/$user/Development" "/home/$user/Projects" "/home/$user/Downloads" || warn "Failed to create directories"
-            ;;
-        "server")
-            log "Setting up server-specific configurations..."
-            nixos-enter --root /mnt -- mkdir -p /var/log/custom /opt/scripts || warn "Failed to create server directories"
-            
-            # Set up logrotate for custom logs
-            nixos-enter --root /mnt -- tee /etc/logrotate.d/custom-logs >/dev/null <<'LOGROTATE_EOF'
-/var/log/custom/*.log {
-    daily
-    missingok
-    rotate 52
-    compress
-    delaycompress
-    notifempty
-    create 644 root root
-}
-LOGROTATE_EOF
-            ;;
-        "vm")
-            log "VM-specific setup completed during installation..."
-            ;;
-    esac
-    
-    # Cleanup
+    # Post-installation cleanup
     log "Cleaning up installation artifacts..."
-    nixos-enter --root /mnt -- nix-collect-garbage -d || warn "Failed to collect garbage"
-    nixos-enter --root /mnt -- nix-store --optimize || warn "Failed to optimize store"
+    rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
+    rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true
     
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
@@ -210,13 +164,9 @@ LOGROTATE_EOF
     echo -e "${BLUE}Password:${NC} $password"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
-    
-    # Display SSH public key if generated
-    if [[ -f "/mnt/home/$user/.ssh/id_ed25519.pub" ]]; then
-        echo -e "${BLUE}SSH Public Key (add to GitHub/servers):${NC}"
-        cat "/mnt/home/$user/.ssh/id_ed25519.pub"
-        echo ""
-    fi
+    log "SSH key will be automatically generated on first boot"
+    log "Post-installation setup is now handled declaratively by NixOS"
+    echo ""
 }
 
 # Main installation flow

@@ -103,15 +103,8 @@
       lynis
     ];
     
-    # Automatic security updates (already configured in server profile)
-    system.autoUpgrade = {
-      enable = true;
-      allowReboot = false;
-      flake = "/etc/nixos";
-      flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
-      dates = "daily";
-      randomizedDelaySec = "45min";
-    };
+    # Note: Automatic security updates are disabled by default in server profile
+    # due to flake path constraints in pure evaluation mode
     
     # Enhanced SSH security - only when security module is enabled
     services.openssh.settings = {

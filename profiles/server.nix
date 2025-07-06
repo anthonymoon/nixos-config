@@ -21,7 +21,6 @@
 
   # Filesystem configuration handled by Disko
   # No swap devices - using ZRAM from base profile
-  swapDevices = [ ];
 
   # Hardware settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
@@ -105,5 +104,24 @@
     allowedUDPPorts = [ ];
     allowPing = false;
     logReversePathDrops = true;
+  };
+
+  # Server-specific directory setup
+  systemd.tmpfiles.rules = [
+    "d /var/log/custom 0755 root root -"
+    "d /opt/scripts 0755 root root -"
+  ];
+
+  # Custom log rotation for server logs
+  services.logrotate.settings = {
+    "/var/log/custom/*.log" = {
+      frequency = "daily";
+      rotate = 52;
+      compress = true;
+      delaycompress = true;
+      missingok = true;
+      notifempty = true;
+      create = "644 root root";
+    };
   };
 }
