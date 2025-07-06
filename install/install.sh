@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 DISK="${DISK:-/dev/vda}"
 # Use the same flake URI that was used to run this installer
 # This ensures consistency between installer and installation target
-FLAKE_URI="${NIXOS_CONFIG_FLAKE:-github:anthonymoon/nixos-config}#"
+FLAKE_URI="${NIXOS_CONFIG_FLAKE:-github:anthonymoon/nixos-config}"
 
 log() {
     echo -e "${GREEN}[INFO]${NC} $1"
@@ -205,6 +205,7 @@ install_nixos() {
 EOF
     
     # Install with selected configuration
+    # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
     if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file; then
         error "NixOS installation failed"
     fi
