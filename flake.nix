@@ -129,7 +129,10 @@
       # Integration tests using nixos-tests framework
       checks.${system} = 
         let
-          testSuite = import ./tests.nix { inherit pkgs lib; };
+          testSuite = import ./tests.nix { 
+            inherit pkgs; 
+            lib = nixpkgs.lib;
+          };
         in {
           vm-test = testSuite.vm-test;
           workstation-test = testSuite.workstation-test;
