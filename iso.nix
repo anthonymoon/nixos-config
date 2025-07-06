@@ -28,12 +28,16 @@ in
   users.users.root.initialPassword = "nixos";
   users.users.nixos.initialPassword = "nixos";
   
-  # Enable NetworkManager for easier network configuration
-  networking.networkmanager.enable = true;
-  
-  # Ensure DHCP is enabled (NetworkManager will handle it)
-  networking.useDHCP = lib.mkForce false; # Let NetworkManager handle DHCP
-  networking.useNetworkd = false;
+  # Network configuration for ISO
+  networking = {
+    # Disable wireless as it conflicts with NetworkManager
+    wireless.enable = lib.mkForce false;
+    # Enable NetworkManager for easier network configuration
+    networkmanager.enable = true;
+    # Let NetworkManager handle DHCP
+    useDHCP = lib.mkForce false;
+    useNetworkd = false;
+  };
   
   # Enable experimental features by default
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
