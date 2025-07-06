@@ -122,6 +122,10 @@ partition_disk() {
     # Format filesystems - FAT32 EFI, XFS root
     log "Formatting filesystems..."
     mkfs.fat -F32 -n boot "$boot_part"
+    
+    # Load XFS module for the installer
+    modprobe xfs || warn "Could not load XFS module"
+    
     mkfs.xfs -f -L nixos "$root_part"
     
     log "Partitioning complete ✓"
@@ -131,6 +135,9 @@ partition_disk() {
 # Mount filesystems
 mount_filesystems() {
     log "Mounting filesystems..."
+    
+    # Ensure XFS module is loaded
+    modprobe xfs || warn "Could not load XFS module"
     
     # Wait for labels to appear
     sleep 3
