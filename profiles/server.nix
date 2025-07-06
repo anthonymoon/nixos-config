@@ -2,6 +2,10 @@
 { config, lib, pkgs, ... }:
 
 {
+  imports = [
+    ../modules/security.nix
+    ../modules/media-server.nix
+  ];
   # Hardware support - generic UEFI system
   boot = {
     initrd = {
@@ -61,9 +65,7 @@
     netcat
     tcpdump
     
-    # Development/admin
-    docker
-    docker-compose
+    # Administration tools
     tmux
     screen
     
@@ -87,13 +89,6 @@
       SystemMaxUse=1G
       MaxRetentionSec=7day
     '';
-    
-    # Firewall protection
-    fail2ban = {
-      enable = true;
-      maxretry = 3;
-      bantime = "1h";
-    };
   };
 
   # Docker for containerized services
@@ -129,6 +124,12 @@
     "net.ipv4.conf.default.send_redirects" = 0;
   };
 
+  # Enable optional modules (disabled by default)
+  modules = {
+    security.enable = true;
+    media-server.enable = false;  # Enable manually if needed
+  };
+  
   # Production-ready firewall configuration
   networking.firewall = {
     enable = true;

@@ -2,6 +2,10 @@
 { config, lib, pkgs, ... }:
 
 {
+  imports = [
+    ../modules/gaming.nix
+    ../modules/development.nix
+  ];
   # Hardware support - generic UEFI system
   boot = {
     initrd = {
@@ -65,32 +69,13 @@
     pulse.enable = true;
   };
 
-  # Gaming
-  programs.steam = {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-    gamescopeSession.enable = true;
-  };
-  programs.gamemode.enable = true;
-
-  # Development tools
+  # Desktop applications
   environment.systemPackages = with pkgs; [
     # Desktop applications
     firefox
     thunderbird
     libreoffice
     vlc
-    
-    # Development
-    vscode
-    git
-    docker
-    docker-compose
-    
-    # Gaming
-    lutris
-    heroic
     
     # Utilities
     discord
@@ -117,7 +102,9 @@
     extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
   };
 
-  # Virtualization
-  virtualisation.docker.enable = true;
-  users.users.${config.myUser.username}.extraGroups = [ "docker" ];
+  # Enable modules
+  modules = {
+    gaming.enable = true;
+    development.enable = true;
+  };
 }
