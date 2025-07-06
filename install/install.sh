@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DISK="${DISK:-/dev/vda}"
-FLAKE_URI=".#"
+FLAKE_URI="github:anthonymoon/nixos-config#"
 
 log() {
     echo -e "${GREEN}[INFO]${NC} $1"
