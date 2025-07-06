@@ -58,38 +58,6 @@
           program = "${disko.packages.${system}.default}/bin/disko";
         };
         
-        # Agent-based testing framework
-        test-agent = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "test-agent" ''
-            export PATH="${nixpkgs.legacyPackages.${system}.lib.makeBinPath [
-              nixpkgs.legacyPackages.${system}.libvirt
-              nixpkgs.legacyPackages.${system}.qemu
-              nixpkgs.legacyPackages.${system}.python3
-              nixpkgs.legacyPackages.${system}.openssh
-              nixpkgs.legacyPackages.${system}.rsync
-              nixpkgs.legacyPackages.${system}.wget
-            ]}:$PATH"
-            export NIXOS_CONFIG_FLAKE="${flake_uri:-github:anthonymoon/nixos-config}"
-            cd ${./.}
-            exec ./testing/test-orchestrator.sh "$@"
-          '');
-        };
-        
-        # VM management utility
-        vm-manager = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "vm-manager" ''
-            export PATH="${nixpkgs.legacyPackages.${system}.lib.makeBinPath [
-              nixpkgs.legacyPackages.${system}.libvirt
-              nixpkgs.legacyPackages.${system}.qemu
-              nixpkgs.legacyPackages.${system}.wget
-            ]}:$PATH"
-            cd ${./.}
-            exec ./testing/vm-manager.sh "$@"
-          '');
-        };
-        
         # Build custom ISO with SSH access
         build-iso = {
           type = "app";
@@ -111,13 +79,6 @@
           nix-tree
           agenix.packages.${system}.default
           disko.packages.${system}.default
-          # Agent testing framework dependencies
-          libvirt
-          qemu
-          python3
-          openssh
-          rsync
-          wget
         ];
         
         shellHook = ''
@@ -125,13 +86,11 @@
           echo "Available configurations: vm, workstation, server"
           echo ""
           echo "Commands:"
-          echo "  nix run .#test-agent setup     - Setup agent testing environment"
-          echo "  nix run .#test-agent test      - Run agent-based installation tests"
-          echo "  nix run .#vm-manager setup     - Setup VM infrastructure only"
           echo "  nix run .#install <config>     - Install NixOS configuration"
+          echo "  nix run .#build-iso           - Build custom ISO with SSH access"
           echo "  nix flake check               - Run declarative tests"
           echo ""
-          echo "🤖 Agent-based testing with real-time monitoring and self-healing"
+          echo "Testing: Use 'nix flake check' for integration tests"
         '';
       };
       

@@ -72,6 +72,8 @@
     # Essential services
     services.openssh = {
       enable = true;
+      # Password authentication is enabled by default here for initial setup.
+      # This is overridden to 'false' in the security module for hardened systems.
       settings = {
         PasswordAuthentication = lib.mkDefault true;
         PermitRootLogin = "no";

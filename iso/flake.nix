@@ -21,17 +21,15 @@
             # Enable SSH in the boot process
             systemd.services.sshd.wantedBy = pkgs.lib.mkForce [ "multi-user.target" ];
             
-            # Add your SSH key to root user
-            users.users.root.openssh.authorizedKeys.keys = [
-              "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
-            ];
-            
-            # Also add to nixos user for convenience
-            users.users.nixos = {
-              openssh.authorizedKeys.keys = [
-                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
-              ];
-            };
+            # To add SSH keys to the ISO, uncomment and replace with your public keys:
+            # users.users.root.openssh.authorizedKeys.keys = [
+            #   "ssh-ed25519 YOUR_ROOT_SSH_PUBLIC_KEY"
+            # ];
+            # users.users.nixos = {
+            #   openssh.authorizedKeys.keys = [
+            #     "ssh-ed25519 YOUR_NIXOS_SSH_PUBLIC_KEY"
+            #   ];
+            # };
             
             # Essential packages for installation
             environment.systemPackages = with pkgs; [

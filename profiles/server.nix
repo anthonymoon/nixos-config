@@ -53,11 +53,14 @@
     rclone
   ];
 
-  # Automatic updates for security (disabled by default to prevent issues)
+  # Automatic updates for security. Disabled by default in server profile
+  # due to flake path constraints in pure evaluation mode. If enabling,
+  # ensure the flake path is correctly set and accessible, e.g., by copying
+  # the flake to /etc/nixos or using a persistent path.
   system.autoUpgrade = {
-    enable = lib.mkForce false; # Disabled to avoid absolute path issues
+    enable = lib.mkForce false;
     allowReboot = false;
-    # flake = "/etc/nixos"; # Absolute path not allowed in pure evaluation
+    # flake = "/etc/nixos"; # Example: Uncomment and adjust if flake is copied to /etc/nixos
     flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
   };
 
