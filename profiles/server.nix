@@ -47,6 +47,8 @@
   system.autoUpgrade = {
     enable = true;
     allowReboot = false;
+    flake = "/etc/nixos";
+    flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
   };
 
   # Server services

@@ -66,7 +66,7 @@
           git
           nixos-rebuild
           nix-tree
-          agenix.packages.${system}.default
+          # agenix.packages.${system}.default  # Disabled - uncomment when secrets are needed
         ];
         
         shellHook = ''
@@ -75,7 +75,7 @@
           echo "${builtins.concatStringsSep "\n" (builtins.attrNames configurations)}"
           echo ""
           echo "Test with: nix build .#nixosConfigurations.<config>.config.system.build.toplevel"
-          echo "Manage secrets with: agenix -e secrets/<secret>.age"
+          echo "To enable secrets: uncomment agenix module in flake.nix and add real keys to secrets/secrets.nix"
         '';
       };
       
