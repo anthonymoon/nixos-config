@@ -10,7 +10,6 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-DISK="${DISK:-/dev/vda}"
 # Use the same flake URI that was used to run this installer
 # This ensures consistency between installer and installation target
 FLAKE_URI="${NIXOS_CONFIG_FLAKE:-github:anthonymoon/nixos-config}"
@@ -64,109 +63,46 @@ select_config() {
     done
 }
 
-# Detect disk or use provided one
+# Detect available disks for user selection
 detect_disk() {
-    if [[ -b "$DISK" ]]; then
-        log "Using disk: $DISK"
-        return
-    fi
-    
-    warn "Disk $DISK not found. Available disks:"
+    log "Available disks:"
     lsblk -d -o NAME,SIZE,TYPE | grep disk
     
-    read -p "Enter disk path (e.g., /dev/sda): " DISK
-    if [[ ! -b "$DISK" ]]; then
-        error "Disk $DISK not found"
-    fi
-}
-
-# Simplified disk partitioning - Always GPT, XFS root, 1GB EFI
-partition_disk() {
-    local disk="$1"
-    
-    warn "This will DESTROY ALL DATA on $disk!"
     if [[ "${AUTO_CONFIRM:-}" != "yes" ]]; then
-        read -p "Continue? [y/N]: " confirm
+        warn "Disko will auto-detect and use the first available disk"
+        warn "This will DESTROY ALL DATA on the selected disk!"
+        read -p "Continue with auto-detection? [y/N]: " confirm
         [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
     fi
     
-    log "Partitioning $disk with GPT..."
+    log "Disko will auto-detect the appropriate disk"
+}
+
+# Use Disko for partitioning and mounting
+setup_disko() {
+    log "Setting up disk partitioning and mounting with Disko..."
     
     # Unmount any existing mounts
     umount -R /mnt 2>/dev/null || true
     
-    # Wipe disk completely
-    wipefs -af "$disk"
-    sgdisk --zap-all "$disk"
-    
-    # Create GPT partition table
-    parted "$disk" --script -- mklabel gpt
-    
-    # Create 1GB EFI System Partition (properly aligned)
-    parted "$disk" --script -- mkpart ESP fat32 1MiB 1025MiB
-    parted "$disk" --script -- set 1 esp on
-    
-    # Create XFS root partition (remaining space, properly aligned)
-    parted "$disk" --script -- mkpart primary xfs 1025MiB 100%
-    
-    # Wait for kernel to recognize partitions
-    sleep 2
-    partprobe "$disk"
-    sleep 2
-    
-    # Verify partitions exist
-    local boot_part="${disk}1"
-    local root_part="${disk}2"
-    
-    [[ -b "$boot_part" ]] || error "Boot partition $boot_part not created"
-    [[ -b "$root_part" ]] || error "Root partition $root_part not created"
-    
-    # Format filesystems - FAT32 EFI, XFS root
-    log "Formatting filesystems..."
-    mkfs.fat -F32 -n boot "$boot_part"
-    
-    # Load XFS module for the installer
-    modprobe xfs || warn "Could not load XFS module"
-    
-    mkfs.xfs -f -L nixos "$root_part"
-    
-    log "Partitioning complete ✓"
-    lsblk "$disk"
-}
-
-# Mount filesystems
-mount_filesystems() {
-    log "Mounting filesystems..."
-    
-    # Ensure XFS module is loaded
-    modprobe xfs || warn "Could not load XFS module"
-    
-    # Wait for labels to appear
-    sleep 3
-    
-    # Mount root - try by label first, fallback to partition
-    if [[ -e /dev/disk/by-label/nixos ]]; then
-        mount /dev/disk/by-label/nixos /mnt
-    else
-        warn "Label not found, mounting by partition"
-        mount "${DISK}2" /mnt
+    # Run Disko to partition and mount the disk
+    # This will use the disko-config.nix for auto-detection and Btrfs setup
+    if ! nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file "${FLAKE_URI}#disko" -- --mode disko "${FLAKE_URI}"; then
+        error "Disko partitioning failed"
     fi
     
-    # Create and mount boot
-    mkdir -p /mnt/boot
-    if [[ -e /dev/disk/by-label/boot ]]; then
-        mount /dev/disk/by-label/boot /mnt/boot
-    else
-        warn "Boot label not found, mounting by partition"
-        mount "${DISK}1" /mnt/boot
-    fi
+    # Verify mounts were created by Disko
+    mountpoint -q /mnt || error "Root filesystem not mounted by Disko"
+    mountpoint -q /mnt/boot || error "Boot filesystem not mounted by Disko"
     
-    # Verify mounts
-    mountpoint -q /mnt || error "Root filesystem not mounted"
-    mountpoint -q /mnt/boot || error "Boot filesystem not mounted"
+    log "Disko partitioning and mounting complete ✓"
     
-    log "Filesystems mounted ✓"
-    df -h /mnt /mnt/boot
+    # Show the disk layout
+    log "Final disk layout:"
+    lsblk
+    
+    log "Mounted filesystems:"
+    df -h /mnt /mnt/boot /mnt/home /mnt/nix /mnt/var/log 2>/dev/null || df -h /mnt /mnt/boot
 }
 
 # Install NixOS
@@ -177,8 +113,8 @@ install_nixos() {
     log "Installing NixOS with configuration: $config"
     log "Setting up user: $user"
     
-    # Generate hardware config and create custom configuration
-    nixos-generate-config --root /mnt
+    # Generate hardware config (Disko will have already created the basic structure)
+    nixos-generate-config --root /mnt --no-filesystems
     
     # Generate random password for user (using /dev/urandom)
     local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
@@ -295,14 +231,13 @@ main() {
     check_installer
     config=$(select_config "$@")
     detect_disk
-    partition_disk "$DISK"
-    mount_filesystems
+    setup_disko
     install_nixos "$config"
     
     echo ""
     log "🎉 Installation complete!"
     log "Configuration: $config"
-    log "Disk: $DISK"
+    log "Disk: Auto-detected by Disko"
     warn "Please reboot to start your new NixOS system"
     echo ""
 }

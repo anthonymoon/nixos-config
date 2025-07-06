@@ -8,9 +8,13 @@
       url = "github:ryantm/agenix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, agenix, ... } @ inputs:
+  outputs = { self, nixpkgs, agenix, disko, ... } @ inputs:
     let
       system = "x86_64-linux";
       
@@ -28,7 +32,9 @@
         modules = [
           ./profiles/base.nix
           config
+          ./disko-config.nix
           agenix.nixosModules.default
+          disko.nixosModules.default
         ];
       };
       
@@ -45,6 +51,12 @@
             exec ${./install/install.sh} "$@"
           '');
         };
+        
+        # Disko app for disk partitioning
+        disko = {
+          type = "app";
+          program = "${disko.packages.${system}.default}/bin/disko";
+        };
       };
       
       # Development shell for testing
@@ -54,6 +66,7 @@
           nixos-rebuild
           nix-tree
           agenix.packages.${system}.default
+          disko.packages.${system}.default
         ];
         
         shellHook = ''
@@ -64,6 +77,9 @@
           echo "Install with: sudo nix run .#install <config>"
         '';
       };
+      
+      # Disko configuration for disk partitioning
+      disko-config = ./disko-config.nix;
       
       # Expose configurations for easy access
       packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {

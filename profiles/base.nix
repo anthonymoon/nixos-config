@@ -96,6 +96,15 @@
     # Allow unfree packages
     nixpkgs.config.allowUnfree = true;
 
+    # ZRAM swap configuration - better than traditional swap
+    zramSwap = {
+      enable = true;
+      # Use 50% of physical RAM for the ZRAM device size.
+      percentage = 50;
+      # Higher priority makes the system prefer ZRAM swap.
+      priority = 100;
+    };
+
     # Secrets management directory (configured by agenix module)
     # age.secrets = {
     #   # Example secret configuration

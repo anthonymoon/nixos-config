@@ -19,22 +19,8 @@
     extraModulePackages = [ ];
   };
 
-  # Filesystem configuration - fallback for testing
-  # In production, this is overridden by hardware-configuration.nix
-  fileSystems = lib.mkDefault {
-    "/" = {
-      device = "/dev/disk/by-label/nixos";
-      fsType = "xfs";
-      options = [ "defaults" ];
-    };
-    "/boot" = {
-      device = "/dev/disk/by-label/boot";
-      fsType = "vfat";
-      options = [ "defaults" ];
-    };
-  };
-  
-  # No swap by default
+  # Filesystem configuration handled by Disko
+  # No swap devices - using ZRAM from base profile
   swapDevices = [ ];
 
   # VM hardware settings
