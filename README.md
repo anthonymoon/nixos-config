@@ -47,12 +47,20 @@ Features:
 ### Installation
 ```bash
 # Interactive menu (recommended)
-sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install
 
 # Direct installation
-sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-vm
-sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-workstation
-sudo nix run --extra-experimental-features "nix-command flakes" github:anthonymoon/nixos-config#install-server
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-vm
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-workstation
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-server
+```
+
+### Post-Installation Setup (Optional)
+```bash
+# Run post-installation setup for additional configuration
+nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install vm
+nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install workstation  
+nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#post-install server
 ```
 
 ### Available Configurations

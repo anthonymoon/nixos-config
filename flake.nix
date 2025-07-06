@@ -62,8 +62,8 @@
         };
         post-install = {
           type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "post-install" ''
-            ${./scripts/post-install.sh} "$@"
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "post-install-wrapper" ''
+            exec ${./scripts/post-install.sh} "$@"
           '');
         };
       };

@@ -37,9 +37,9 @@ sudo nix-channel --update || warn "Failed to update channels"
 
 # Rebuild with latest configuration
 log "Rebuilding system with latest configuration..."
-if ! sudo nixos-rebuild switch --flake ".#$CONFIG" --upgrade; then
+if ! sudo nixos-rebuild switch --flake "github:anthonymoon/nixos-config#$CONFIG" --no-write-lock-file --upgrade; then
     warn "System rebuild failed, trying without upgrade..."
-    sudo nixos-rebuild switch --flake ".#$CONFIG" || error "System rebuild failed completely"
+    sudo nixos-rebuild switch --flake "github:anthonymoon/nixos-config#$CONFIG" --no-write-lock-file || error "System rebuild failed completely"
 fi
 
 # Set up user shell
