@@ -44,6 +44,9 @@
               rsync
             ];
             
+            # Enable experimental features by default
+            nix.settings.experimental-features = [ "nix-command" "flakes" ];
+            
             # Enable NetworkManager for easier network configuration
             networking.networkmanager.enable = true;
             
