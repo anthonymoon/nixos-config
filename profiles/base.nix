@@ -50,7 +50,9 @@
       extraGroups = [ "wheel" "networkmanager" ];
       shell = pkgs.zsh;
       # Create SSH directory structure
-      openssh.authorizedKeys.keys = [ ];
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
       createHome = true;
     };
 

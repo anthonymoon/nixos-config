@@ -1,0 +1,61 @@
+#!/usr/bin/expect -f
+
+# Automated NixOS installation via console
+set timeout 300
+
+# Connect to console
+spawn virsh console nixos-vm-test
+
+# Wait for boot to complete
+expect {
+    "<<< Welcome to NixOS" { send "\r" }
+    "nixos@nixos" { send "\r" }
+    timeout { 
+        send "\r"
+        exp_continue
+    }
+}
+
+# Wait for prompt
+expect {
+    "nixos@nixos" { }
+    "~]$" { }
+    timeout { send "\r"; exp_continue }
+}
+
+# Run installation command
+send "sudo nix run --extra-experimental-features \"nix-command flakes\" --no-write-lock-file github:anthonymoon/nixos-config#install-vm\r"
+
+# Wait for installation to start
+expect {
+    "Select disk" {
+        # Send disk selection
+        send "1\r"
+    }
+    "/dev/vda" {
+        send "\r"
+    }
+    timeout {
+        puts "Timeout waiting for disk selection"
+        exit 1
+    }
+}
+
+# Monitor installation progress
+expect {
+    "Installation complete" {
+        puts "\nInstallation completed successfully!"
+    }
+    "Rebooting" {
+        puts "\nSystem is rebooting..."
+    }
+    timeout {
+        puts "\nInstallation timeout"
+    }
+}
+
+# Exit console
+send "\003"
+send "~."
+
+expect eof

@@ -28,10 +28,16 @@ in
   users.users.root = {
     initialPassword = lib.mkForce "nixos";
     initialHashedPassword = lib.mkForce null;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+    ];
   };
   users.users.nixos = {
     initialPassword = lib.mkForce "nixos";
     initialHashedPassword = lib.mkForce null;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+    ];
   };
   
   # Network configuration for ISO
