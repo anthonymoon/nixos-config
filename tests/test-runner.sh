@@ -168,9 +168,13 @@ test_flake_evaluation() {
     
     cd "$ROOT_DIR"
     
-    # Test each configuration builds
+    # Clear Nix evaluation cache to ensure fresh builds
+    log "Clearing Nix evaluation cache..."
+    rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
+    
+    # Test each configuration builds with refresh flag
     for config in vm workstation server; do
-        if sudo nix --extra-experimental-features "nix-command flakes" build --no-link --dry-run --no-write-lock-file ".#nixosConfigurations.$config.config.system.build.toplevel" >/dev/null 2>&1; then
+        if sudo nix --refresh --extra-experimental-features "nix-command flakes" build --no-link --dry-run --no-write-lock-file ".#nixosConfigurations.$config.config.system.build.toplevel" >/dev/null 2>&1; then
             test_pass "Configuration '$config' builds successfully"
         else
             test_fail "Configuration '$config' failed to build"
@@ -199,8 +203,14 @@ test_vm_installation() {
         return
     fi
     
-    # Test installation command
-    if vm_exec "nix run --extra-experimental-features 'nix-command flakes' --no-write-lock-file github:anthonymoon/nixos-config#post-install vm" >/dev/null 2>&1; then
+    # Clear cache and test installation command with latest commit
+    vm_exec "rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true" >/dev/null 2>&1
+    
+    # Get latest commit hash for explicit reference
+    local commit_hash=$(git rev-parse HEAD)
+    
+    # Test installation command with explicit commit hash and refresh
+    if vm_exec "nix run --refresh --extra-experimental-features 'nix-command flakes' --no-write-lock-file github:anthonymoon/nixos-config/$commit_hash#post-install vm" >/dev/null 2>&1; then
         test_pass "VM installation/post-install completed successfully"
     else
         test_fail "VM installation/post-install failed"

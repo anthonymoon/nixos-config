@@ -204,9 +204,12 @@ install_nixos() {
 }
 EOF
     
-    # Install with selected configuration
+    # Clear Nix evaluation cache for fresh installation
+    rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
+    
+    # Install with selected configuration using refresh flag
     # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
-    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file; then
+    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org" --refresh; then
         error "NixOS installation failed"
     fi
     
