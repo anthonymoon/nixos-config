@@ -1,36 +1,21 @@
-{ lib, ... }:
-
-let
-  # --- Auto-detection logic for the main disk ---
-  # It now searches for the first available NVMe, ATA, SCSI, or Virtio disk.
-  # This makes the configuration portable across physical and virtual machines.
-  findDisk =
-    let
-      # List all entries in /dev/disk/by-id
-      diskIds = builtins.attrNames (builtins.readDir "/dev/disk/by-id");
-      # Filter for common disk types, excluding partitions
-      isMainDisk = id:
-        (
-          lib.strings.startsWith "nvme-eui." id ||
-          lib.strings.startsWith "nvme-Samsung_SSD" id ||
-          lib.strings.startsWith "ata-" id ||
-          lib.strings.startsWith "virtio-" id || # Added for QEMU/KVM virtual disks
-          lib.strings.startsWith "scsi-" id      # Added for broader virtual/enterprise disk compatibility
-        ) && !(lib.strings.hasInfix "-part" id);
-      # Find the first disk that matches our criteria
-      diskId = lib.findFirst isMainDisk null diskIds;
-    in
-    # If a disk is found, return its full path, otherwise abort.
-    if diskId != null
-    then "/dev/disk/by-id/${diskId}"
-    else builtins.abort "No suitable NVMe, ATA, SCSI, or Virtio disk found in /dev/disk/by-id";
-in
+# Disko configuration for automatic disk detection and Btrfs setup
+# This configuration will be imported by NixOS modules
 {
   disko.devices = {
     disk = {
       main = {
         type = "disk";
-        device = findDisk; # Use the auto-detected disk path
+        # Use a simple heuristic for the first available disk
+        # This will be the first /dev/vda, /dev/sda, /dev/nvme0n1, etc.
+        device = builtins.head (
+          builtins.filter (disk: builtins.pathExists disk) [
+            "/dev/vda"      # QEMU/KVM virtual disk (most common)
+            "/dev/sda"      # SATA/SCSI disk
+            "/dev/nvme0n1"  # NVMe disk
+            "/dev/xvda"     # Xen virtual disk
+            "/dev/hda"      # IDE disk (legacy)
+          ]
+        );
         content = {
           type = "gpt";
           partitions = {

@@ -78,8 +78,8 @@
         '';
       };
       
-      # Disko configuration for disk partitioning
-      disko-config = ./disko-config.nix;
+# Disko configuration for disk partitioning
+      diskoConfigurations.default = ./disko-config.nix;
       
       # Expose configurations for easy access
       packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {
