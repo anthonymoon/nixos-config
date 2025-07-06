@@ -73,7 +73,7 @@
             # Clean up any previous result symlink/directory
             rm -rf result
             # Run nix build directly in the current directory. This will create a 'result' symlink here.
-            nix build "$ISO_FLAKE_PATH#packages.${system}.default" --extra-experimental-features "nix-command flakes"
+            nix build "$ISO_FLAKE_PATH" --extra-experimental-features "nix-command flakes"
 
             # Check if build succeeded and move the result
             if [ -d "result" ]; then
