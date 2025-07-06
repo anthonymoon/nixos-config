@@ -20,6 +20,7 @@ Features:
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
 - [Key Features](#key-features)
+- [Testing](#testing)
 - [Development](#development)
 - [Migration from v1](#migration-from-v1)
 - [Support](#support)
@@ -129,6 +130,46 @@ nixos-config/
 - **No VM detection** - use vm-* configurations for VMs
 - **No conditional logic** - everything predictable
 - **Deterministic behavior** - same input = same output
+
+## Testing
+
+### 🧪 Test-Driven Development Pipeline
+
+This repository includes a comprehensive automated testing pipeline designed for TDD workflows:
+
+- **VM-based testing**: Full integration testing using virtual machines
+- **Snapshot/restore capabilities**: Clean state testing with VM snapshots
+- **Comprehensive test coverage**: Syntax, build, installation, and integration tests
+- **TDD workflow automation**: RED-GREEN-REFACTOR cycle support
+
+### Test Status ✅
+
+All configurations successfully pass automated testing:
+
+- **✅ VM Configuration**: Builds and deploys successfully
+- **✅ Workstation Configuration**: Builds with gaming and development modules  
+- **✅ Server Configuration**: Builds with security and media server modules
+- **✅ Module Integration**: All modules tested and functional
+- **✅ Syntax Validation**: All Nix files syntactically correct
+
+### Quick Testing
+
+```bash
+# Run all tests
+./tests/test-runner.sh run full
+
+# Run specific test suites
+./tests/test-runner.sh run syntax      # Syntax validation
+./tests/test-runner.sh run build       # Configuration building  
+./tests/test-runner.sh run install     # Installation testing
+./tests/test-runner.sh run integration # Module functionality
+
+# TDD workflow
+./tests/tdd-workflow.sh cycle          # Complete TDD cycle
+./tests/tdd-workflow.sh watch          # Auto-test on changes
+```
+
+See the [tests README](tests/README.md) for comprehensive testing documentation.
 
 ## Development
 
