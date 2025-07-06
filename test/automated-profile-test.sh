@@ -5,6 +5,11 @@
 
 set -euo pipefail
 
+# SSH Authentication Note:
+# Currently using password authentication (nixos:nixos) for testing.
+# Future versions will transition to SSH key authentication once
+# the infrastructure is fully configured with authorized_keys.
+
 # Configuration
 BRIDGE="virbr0"
 ISO_PATH="/home/amoon/nixos-minimal-25.05.805766.7a732ed41ca0-x86_64-linux.iso"
