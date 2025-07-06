@@ -68,11 +68,11 @@
     rclone
   ];
 
-  # Automatic updates for security
+  # Automatic updates for security (disabled by default to prevent issues)
   system.autoUpgrade = {
-    enable = true;
+    enable = false; # Disabled to avoid absolute path issues
     allowReboot = false;
-    flake = "/etc/nixos";
+    # flake = "/etc/nixos"; # Absolute path not allowed in pure evaluation
     flags = [ "--update-input" "nixpkgs" "--commit-lock-file" ];
   };
 

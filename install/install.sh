@@ -178,6 +178,12 @@ install_nixos() {
     # Generate hardware config and create custom configuration
     nixos-generate-config --root /mnt
     
+    # Generate random password for user amoon (using /dev/urandom)
+    local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
+    
+    # Hash password using mkpasswd from whois package
+    local password_hash=$(nix-shell -p whois --run "echo '$password' | mkpasswd -m sha-512 -s")
+    
     # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
 # NixOS Configuration - DO NOT EDIT
@@ -188,25 +194,13 @@ install_nixos() {
     ./hardware-configuration.nix
   ];
   
-  # Use the flake configuration
-  system.configurationRevision = null;
-}
-EOF
-    
-    # Generate random password for user amoon (using /dev/urandom)
-    local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
-    
-    # Hash password using mkpasswd from whois package
-    local password_hash=$(nix-shell -p whois --run "echo '$password' | mkpasswd -m sha-512 -s")
-    
-    # Create temporary configuration to set password
-    cat > /mnt/etc/nixos/user-config.nix << EOF
-# Temporary user configuration
-{ config, lib, pkgs, ... }:
-{
+  # User password configuration
   users.users.amoon = {
     hashedPassword = "$password_hash";
   };
+  
+  # Use the flake configuration
+  system.configurationRevision = null;
 }
 EOF
     
