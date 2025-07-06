@@ -11,7 +11,9 @@ NC='\033[0m' # No Color
 
 # Configuration
 DISK="${DISK:-/dev/vda}"
-FLAKE_URI="github:anthonymoon/nixos-config#"
+# Use the same flake URI that was used to run this installer
+# This ensures consistency between installer and installation target
+FLAKE_URI="${NIXOS_CONFIG_FLAKE:-github:anthonymoon/nixos-config}#"
 
 log() {
     echo -e "${GREEN}[INFO]${NC} $1"

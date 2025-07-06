@@ -40,23 +40,29 @@
       apps.${system} = {
         install = {
           type = "app";
-          program = "${./install/install.sh}";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install" ''
+            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/${self.rev or "main"}"
+            exec ${./install/install.sh} "$@"
+          '');
         };
         install-vm = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-vm" ''
+            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/${self.rev or "main"}"
             ${./install/install.sh} vm
           '');
         };
         install-workstation = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-workstation" ''
+            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/${self.rev or "main"}"
             ${./install/install.sh} workstation
           '');
         };
         install-server = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-server" ''
+            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/${self.rev or "main"}"
             ${./install/install.sh} server
           '');
         };
