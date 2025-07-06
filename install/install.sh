@@ -100,12 +100,12 @@ partition_disk() {
     # Create GPT partition table
     parted "$disk" --script -- mklabel gpt
     
-    # Create 1GB EFI System Partition
-    parted "$disk" --script -- mkpart ESP fat32 1MB 1025MB
+    # Create 1GB EFI System Partition (properly aligned)
+    parted "$disk" --script -- mkpart ESP fat32 1MiB 1025MiB
     parted "$disk" --script -- set 1 esp on
     
-    # Create XFS root partition (remaining space)
-    parted "$disk" --script -- mkpart primary xfs 1025MB 100%
+    # Create XFS root partition (remaining space, properly aligned)
+    parted "$disk" --script -- mkpart primary xfs 1025MiB 100%
     
     # Wait for kernel to recognize partitions
     sleep 2
