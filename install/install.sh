@@ -194,7 +194,7 @@ install_nixos() {
 EOF
     
     # Install with selected configuration
-    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd; then
+    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file; then
         error "NixOS installation failed"
     fi
     
