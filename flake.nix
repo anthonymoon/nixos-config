@@ -77,26 +77,13 @@
             if [ -d "result" ]; then # nix-build creates a symlink to a directory containing the ISO
                 echo "✅ Build completed successfully!"
                 echo ""
-                echo "📍 ISO location:"
-                # Ensure the target directory exists
-                mkdir -p "$ORIGINAL_PWD/result/iso"
-                # Find the actual ISO file within the 'result' symlink and copy it
-                ISO_FILE=$(find result -name "*.iso" -print -quit)
-                if [ -n "$ISO_FILE" ]; then
-                    cp "$ISO_FILE" "$ORIGINAL_PWD/result/iso/nixos-custom.iso" # Give it a generic name
-                    ls -la "$ORIGINAL_PWD/result/iso/nixos-custom.iso"
-                    echo ""
-                    echo "📋 To use the ISO:"
-                    echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/nixos-custom.iso of=/dev/sdX bs=4M status=progress"
-                    echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/nixos-custom.iso"
-                    echo ""
-                    echo "🔑 SSH access:"
-                    echo "  - Root user has your SSH key pre-installed"
-                    echo "  - Default passwords: root='nixos', nixos='nixos'"
-                else
-                    echo "❌ Build failed! ISO file not found within result directory."
-                    exit 1
-                fi
+                echo "ISO is located at: $ORIGINAL_PWD/result/iso/nixos-custom.iso"
+                echo ""
+                echo "📋 To use the ISO:"
+                echo "  - Copy to USB (DANGER: This command will overwrite the entire /dev/sdX device!):"
+                echo "    sudo dd if=\"$ORIGINAL_PWD/result/iso/nixos-custom.iso\" of=/dev/sdX bs=4M status=progress"
+                echo "  - Boot VM:"
+                echo "    qemu-system-x86_64 -enable-kvm -m 2048 -cdrom \"$ORIGINAL_PWD/result/iso/nixos-custom.iso\""
             else
                 echo "❌ Build failed! Result directory not found."
                 exit 1

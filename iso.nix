@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, extraPackages ? [] }:
 {
   imports = [
     <nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix>
@@ -7,5 +7,20 @@
     # doesn't need to run "nix-channel --update" first.
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
   ];
-  environment.systemPackages = [ pkgs.neovim ];
+  environment.systemPackages = with pkgs; [
+    neovim
+    openssh # For scp
+    htop
+    iotop
+    nmap
+    netcat
+    tcpdump
+    tmux
+    git
+    curl
+    wget
+    tree
+    unzip
+    which
+  ] ++ extraPackages;
 }
