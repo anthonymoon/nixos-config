@@ -25,8 +25,14 @@ in
   };
   
   # Set default passwords for initial access
-  users.users.root.initialPassword = "nixos";
-  users.users.nixos.initialPassword = "nixos";
+  users.users.root = {
+    initialPassword = lib.mkForce "nixos";
+    initialHashedPassword = lib.mkForce null;
+  };
+  users.users.nixos = {
+    initialPassword = lib.mkForce "nixos";
+    initialHashedPassword = lib.mkForce null;
+  };
   
   # Network configuration for ISO
   networking = {
