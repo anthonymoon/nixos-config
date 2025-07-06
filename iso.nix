@@ -6,10 +6,9 @@ in
   imports = [
     <nixpkgs/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix>
     <nixpkgs/nixos/modules/installer/cd-dvd/channel.nix>
-    <nixpkgs/nixos/modules/installer/cd-dvd/iso-image.nix> # Import iso-image module
   ];
 
-  isoImage.size = "2G"; # Increase ISO image size
+  # ISO configuration
   isoImage.isoName = "nixos-custom-${pkgs.stdenv.hostPlatform.system}.iso";
   isoImage.squashfsCompression = "gzip -Xcompression-level 1"; # Faster compression
   
