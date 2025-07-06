@@ -65,8 +65,29 @@ select_config() {
 
 # Detect available disks for user selection
 detect_disk() {
-    log "Available disks:"
-    lsblk -d -o NAME,SIZE,TYPE | grep disk
+    log "Available disks (excluding CD-ROM/DVD):"
+    # Show only real disks, not CD-ROM or loop devices
+    lsblk -d -o NAME,SIZE,TYPE,MODEL | grep -E "disk|nvme" | grep -v -E "rom|loop" || true
+    
+    # Check if we have any valid disks
+    local disk_count=$(lsblk -d -o TYPE | grep -E "disk|nvme" | grep -v -E "rom|loop" | wc -l)
+    if [[ "$disk_count" -eq 0 ]]; then
+        error "No suitable disks found for installation!"
+    fi
+    
+    # Show which disk will be used
+    local target_disk=""
+    if [[ -e /dev/vda ]]; then
+        target_disk="/dev/vda"
+    elif [[ -e /dev/sda ]]; then
+        target_disk="/dev/sda"
+    elif [[ -e /dev/nvme0n1 ]]; then
+        target_disk="/dev/nvme0n1"
+    fi
+    
+    if [[ -n "$target_disk" ]]; then
+        log "Target disk will be: $target_disk"
+    fi
     
     if [[ "${AUTO_CONFIRM:-}" != "yes" ]]; then
         warn "Disko will auto-detect and use the first available disk"
@@ -75,7 +96,7 @@ detect_disk() {
         [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
     fi
     
-    log "Disko will auto-detect the appropriate disk"
+    log "Proceeding with disk setup..."
 }
 
 # Use Disko for partitioning and mounting

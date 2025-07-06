@@ -16,9 +16,12 @@
               else [];
             
             # Filter for main disks (not partitions) by common patterns
+            # Exclude CD-ROM devices
             isMainDisk = id: 
-              (builtins.match ".*(nvme|ata|scsi|virtio|usb).*" id != null) &&
-              (builtins.match ".*-part[0-9]+.*" id == null);
+              (builtins.match ".*(nvme|ata|scsi|virtio).*" id != null) &&
+              (builtins.match ".*-part[0-9]+.*" id == null) &&
+              (builtins.match ".*CD-ROM.*" id == null) &&
+              (builtins.match ".*DVD.*" id == null);
             
             mainDisks = builtins.filter isMainDisk diskIds;
             
