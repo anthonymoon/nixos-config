@@ -77,13 +77,20 @@
             if [ -d "result" ]; then # nix-build creates a symlink to a directory containing the ISO
                 echo "✅ Build completed successfully!"
                 echo ""
-                echo "ISO is located at: $ORIGINAL_PWD/result/iso/nixos-custom.iso"
-                echo ""
-                echo "📋 To use the ISO:"
-                echo "  - Copy to USB (DANGER: This command will overwrite the entire /dev/sdX device!):"
-                echo "    sudo dd if=\"$ORIGINAL_PWD/result/iso/nixos-custom.iso\" of=/dev/sdX bs=4M status=progress"
-                echo "  - Boot VM:"
-                echo "    qemu-system-x86_64 -enable-kvm -m 2048 -cdrom \"$ORIGINAL_PWD/result/iso/nixos-custom.iso\""
+                # Find the actual ISO file
+                ISO_FILE=$(find result/iso -name "*.iso" -type f | head -n1)
+                if [ -n "$ISO_FILE" ]; then
+                    echo "📍 ISO location: $ORIGINAL_PWD/$ISO_FILE"
+                    echo ""
+                    echo "📋 To use the ISO:"
+                    echo "  - Copy to USB (DANGER: This command will overwrite the entire /dev/sdX device!):"
+                    echo "    sudo dd if=\"$ORIGINAL_PWD/$ISO_FILE\" of=/dev/sdX bs=4M status=progress"
+                    echo "  - Boot VM:"
+                    echo "    qemu-system-x86_64 -enable-kvm -m 2048 -cdrom \"$ORIGINAL_PWD/$ISO_FILE\""
+                else
+                    echo "⚠️  ISO file not found in result/iso/"
+                    ls -la result/iso/
+                fi
             else
                 echo "❌ Build failed! Result directory not found."
                 exit 1
