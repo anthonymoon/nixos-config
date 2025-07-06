@@ -66,6 +66,9 @@
             # Get the absolute path to the iso flake
             ISO_FLAKE_PATH="${self}/iso"
 
+            # Store the original working directory
+            ORIGINAL_PWD="$(pwd)"
+
             # Create a temporary directory for the build
             BUILD_DIR=$(mktemp -d)
             trap 'rm -rf "$BUILD_DIR"' EXIT # Clean up temp directory on exit
@@ -78,15 +81,15 @@
                 echo "✅ Build completed successfully!"
                 echo ""
                 echo "📍 ISO location:"
-                # Ensure the result directory exists in the current working directory
-                mkdir -p result/iso
-                # Find the actual ISO file and copy it
-                find "$BUILD_DIR/result" -name "*.iso" -exec cp {} result/iso/ \;
-                ls -la result/iso/*.iso
+                # Ensure the result directory exists in the original working directory
+                mkdir -p "$ORIGINAL_PWD/result/iso"
+                # Find the actual ISO file and copy it to the original working directory
+                find "$BUILD_DIR/result" -name "*.iso" -exec cp {} "$ORIGINAL_PWD/result/iso/" \;
+                ls -la "$ORIGINAL_PWD/result/iso/*.iso"
                 echo ""
                 echo "📋 To use the ISO:"
-                echo "  - Copy to USB: sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress"
-                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom result/iso/*.iso"
+                echo "  - Copy to USB: sudo dd if=$ORIGINAL_PWD/result/iso/*.iso of=/dev/sdX bs=4M status=progress"
+                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom $ORIGINAL_PWD/result/iso/*.iso"
                 echo ""
                 echo "🔑 SSH access:"
                 echo "  - Root user has your SSH key pre-installed"
