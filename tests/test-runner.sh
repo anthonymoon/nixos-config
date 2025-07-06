@@ -168,9 +168,10 @@ test_flake_evaluation() {
     
     cd "$ROOT_DIR"
     
-    # Clear Nix evaluation cache to ensure fresh builds
+    # Clear Nix evaluation cache to ensure fresh builds (user and root)
     log "Clearing Nix evaluation cache..."
     rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
+    sudo rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true
     
     # Test each configuration builds with refresh flag
     for config in vm workstation server; do
@@ -203,8 +204,9 @@ test_vm_installation() {
         return
     fi
     
-    # Clear cache and test installation command with latest commit
+    # Clear cache and test installation command with latest commit (user and root)
     vm_exec "rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true" >/dev/null 2>&1
+    vm_exec "sudo rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true" >/dev/null 2>&1
     
     # Get latest commit hash for explicit reference
     local commit_hash=$(git rev-parse HEAD)

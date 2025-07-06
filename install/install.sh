@@ -204,8 +204,9 @@ install_nixos() {
 }
 EOF
     
-    # Clear Nix evaluation cache for fresh installation
+    # Clear Nix evaluation cache for fresh installation (user and root)
     rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
+    rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true
     
     # Install with selected configuration using refresh flag
     # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
