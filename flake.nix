@@ -89,6 +89,18 @@
             exec ./testing/vm-manager.sh "$@"
           '');
         };
+        
+        # Build custom ISO with SSH access
+        build-iso = {
+          type = "app";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "build-iso" ''
+            cd ${./.}/iso
+            echo "Building custom NixOS ISO with SSH access..."
+            nix build --no-link --print-out-paths
+            echo "ISO built successfully!"
+            echo "Find it in the result/iso/ directory"
+          '');
+        };
       };
       
       # Development shell for testing
@@ -129,6 +141,7 @@
       # Integration tests using nixos-tests framework
       checks.${system} = 
         let
+          pkgs = nixpkgs.legacyPackages.${system};
           testSuite = import ./tests.nix { 
             inherit pkgs; 
             lib = nixpkgs.lib;

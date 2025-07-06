@@ -1,0 +1,79 @@
+{
+  description = "Custom NixOS installation ISO with SSH access";
+  
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
+  };
+  
+  outputs = { self, nixpkgs }: {
+    packages.x86_64-linux.default = self.nixosConfigurations.customIso.config.system.build.isoImage;
+    
+    nixosConfigurations = {
+      customIso = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          ({ pkgs, modulesPath, ... }: {
+            imports = [ 
+              (modulesPath + "/installer/cd-dvd/installation-cd-minimal.nix")
+              (modulesPath + "/installer/cd-dvd/channel.nix")
+            ];
+            
+            # Enable SSH in the boot process
+            systemd.services.sshd.wantedBy = pkgs.lib.mkForce [ "multi-user.target" ];
+            
+            # Add your SSH key to root user
+            users.users.root.openssh.authorizedKeys.keys = [
+              "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+            ];
+            
+            # Also add to nixos user for convenience
+            users.users.nixos = {
+              openssh.authorizedKeys.keys = [
+                "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+              ];
+            };
+            
+            # Essential packages for installation
+            environment.systemPackages = with pkgs; [
+              vim
+              git
+              curl
+              wget
+              htop
+              tmux
+              rsync
+            ];
+            
+            # Enable NetworkManager for easier network configuration
+            networking.networkmanager.enable = true;
+            
+            # Faster compression for quicker builds
+            isoImage.squashfsCompression = "gzip -Xcompression-level 1";
+            
+            # Custom ISO naming
+            isoImage.isoName = "nixos-ssh-${pkgs.stdenv.hostPlatform.system}.iso";
+            
+            # Enable password authentication for initial setup if needed
+            services.openssh = {
+              enable = true;
+              settings = {
+                PermitRootLogin = "yes";
+                PasswordAuthentication = true;
+              };
+            };
+            
+            # Set a default password for root (can be changed after boot)
+            users.users.root.initialPassword = "nixos";
+            users.users.nixos.initialPassword = "nixos";
+            
+            # Ensure the ISO boots with networking enabled
+            networking.useDHCP = true;
+            
+            # Include our nixos-config flake in the ISO for easy installation
+            environment.etc."nixos-config-flake-uri".text = "github:anthonymoon/nixos-config";
+          })
+        ];
+      };
+    };
+  };
+}

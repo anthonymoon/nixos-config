@@ -8,7 +8,7 @@ set -euo pipefail
 VM_NAME="nixos-test-vm"
 VM_MEMORY="4096"
 VM_DISK_SIZE="20G"
-VM_NETWORK="default"
+VM_BRIDGE="virbr0"
 BASE_SNAPSHOT="clean-installer-state"
 NIXOS_ISO_PATH="$HOME/latest-nixos-graphical-x86_64-linux.iso"
 WORK_DIR="/tmp/nixos-testing"
@@ -54,7 +54,8 @@ ensure_iso() {
     fi
     
     log "Using existing ISO: $NIXOS_ISO_PATH"
-    echo "$NIXOS_ISO_PATH"
+    # Return ISO path without any log output that could interfere
+    printf "%s" "$NIXOS_ISO_PATH"
 }
 
 # Create base VM if it doesn't exist
@@ -78,10 +79,8 @@ create_base_vm() {
         --vcpus 2 \
         --disk path="$WORK_DIR/${VM_NAME}.qcow2,format=qcow2" \
         --cdrom "$iso_path" \
-        --network network="$VM_NETWORK" \
-        --graphics none \
-        --console pty,target_type=serial \
-        --extra-args "console=ttyS0,115200n8 serial" \
+        --network bridge="$VM_BRIDGE" \
+        --graphics vnc,listen=127.0.0.1 \
         --noautoconsole \
         --boot cdrom,hd
     
@@ -90,33 +89,59 @@ create_base_vm() {
 
 # Wait for VM to get IP address
 wait_for_ip() {
-    local timeout=120
+    local timeout=300
     local elapsed=0
     
-    log "Waiting for VM to get IP address..."
+    log "Waiting for VM to get IP address on 10.10.10.0/23..."
     
     while [[ $elapsed -lt $timeout ]]; do
         local ip=$(get_vm_ip)
-        if [[ -n "$ip" ]]; then
+        if [[ -n "$ip" && "$ip" =~ ^10\.10\.(10|11)\.[0-9]+$ ]]; then
             log "VM IP: $ip"
             echo "$ip"
             return
         fi
         
-        sleep 2
-        elapsed=$((elapsed + 2))
+        # Show progress every 30 seconds
+        if [[ $((elapsed % 30)) -eq 0 ]] && [[ $elapsed -gt 0 ]]; then
+            log "Still waiting for IP... (${elapsed}s elapsed)"
+            # Debug: show what we found
+            virsh domifaddr "$VM_NAME" 2>/dev/null || true
+        fi
+        
+        sleep 5
+        elapsed=$((elapsed + 5))
     done
     
-    error "Timeout waiting for VM IP"
+    error "Timeout waiting for VM IP after ${timeout}s"
 }
 
-# Get VM IP address
+# Get VM IP address from virsh domifaddr or arp table
 get_vm_ip() {
-    virsh net-dhcp-leases "$VM_NETWORK" 2>/dev/null | \
-        grep "$VM_NAME" | \
-        awk '{print $5}' | \
-        cut -d'/' -f1 | \
-        head -1
+    # Try virsh domifaddr first (works with guest agent)
+    local ip=$(virsh domifaddr "$VM_NAME" 2>/dev/null | grep -E '10\.10\.(10|11)\.' | awk '{print $4}' | cut -d'/' -f1 | head -1)
+    
+    # If that doesn't work, try virsh domifaddr with --source lease
+    if [[ -z "$ip" ]]; then
+        ip=$(virsh domifaddr "$VM_NAME" --source lease 2>/dev/null | grep -E '10\.10\.(10|11)\.' | awk '{print $4}' | cut -d'/' -f1 | head -1)
+    fi
+    
+    # Try virsh domifaddr with --source arp
+    if [[ -z "$ip" ]]; then
+        ip=$(virsh domifaddr "$VM_NAME" --source arp 2>/dev/null | grep -E '10\.10\.(10|11)\.' | awk '{print $4}' | cut -d'/' -f1 | head -1)
+    fi
+    
+    # If that doesn't work, try to find it via MAC address and arp
+    if [[ -z "$ip" ]]; then
+        local mac=$(virsh domiflist "$VM_NAME" 2>/dev/null | grep "$VM_BRIDGE" | awk '{print $5}' | head -1)
+        if [[ -n "$mac" ]]; then
+            # Force ARP refresh
+            ping -c 1 -W 1 10.10.10.255 >/dev/null 2>&1 || true
+            ip=$(arp -n | grep -i "$mac" | grep -E '10\.10\.(10|11)\.' | awk '{print $1}' | head -1)
+        fi
+    fi
+    
+    echo "$ip"
 }
 
 # Wait for SSH to be available
@@ -234,8 +259,11 @@ main() {
     case "${1:-help}" in
         "setup")
             check_prerequisites
-            local iso_path=$(ensure_iso)
-            create_base_vm "$iso_path"
+            log "Using existing ISO: $NIXOS_ISO_PATH"
+            if [[ ! -f "$NIXOS_ISO_PATH" ]]; then
+                error "NixOS ISO not found at $NIXOS_ISO_PATH"
+            fi
+            create_base_vm "$NIXOS_ISO_PATH"
             create_base_snapshot
             ;;
         "clean")
