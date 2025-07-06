@@ -184,21 +184,18 @@ in {
     users.users = {
       jackett = {
         group = "jackett";
-        uid = 979;
         home = "/var/lib/jackett";
         createHome = false;
         isSystemUser = true;
       };
       qbittorrent = {
         group = "media";
-        uid = 978;
         home = "/var/lib/qbittorrent";
         createHome = false;
         isSystemUser = true;
       };
       jellyseerr = {
         group = "media";
-        uid = 977;
         home = "/var/lib/jellyseerr";
         createHome = false;
         isSystemUser = true;

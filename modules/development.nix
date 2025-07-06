@@ -65,8 +65,7 @@
       screen
     ];
     
-    # Enable Docker
-    virtualisation.docker.enable = true;
+    
     
     # Enable PostgreSQL for development
     services.postgresql = {
@@ -74,14 +73,11 @@
       package = pkgs.postgresql_16;
       enableTCPIP = true;
       authentication = pkgs.lib.mkOverride 10 ''
-        local all all trust
-        host all all 127.0.0.1/32 trust
-        host all all ::1/128 trust
+        local all all scram-sha-256
+        host all all 127.0.0.1/32 scram-sha-256
+        host all all ::1/128 scram-sha-256
       '';
-      initialScript = pkgs.writeText "backend-initScript" ''
-        CREATE ROLE ${config.myUser.username} WITH LOGIN SUPERUSER;
-        CREATE DATABASE ${config.myUser.username} OWNER ${config.myUser.username};
-      '';
+      
     };
     
     # Enable Redis for development

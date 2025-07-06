@@ -55,7 +55,7 @@
     };
 
     # Security defaults
-    security.sudo.wheelNeedsPassword = false;
+    security.sudo.wheelNeedsPassword = true;
 
     # Essential packages - minimal but functional
     environment.systemPackages = with pkgs; [
@@ -75,7 +75,7 @@
       # Password authentication is enabled by default here for initial setup.
       # This is overridden to 'false' in the security module for hardened systems.
       settings = {
-        PasswordAuthentication = lib.mkDefault true;
+        PasswordAuthentication = false;
         PermitRootLogin = "no";
       };
     };

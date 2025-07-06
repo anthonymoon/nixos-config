@@ -25,12 +25,20 @@ error() {
 }
 
 # Configuration
-VM_IP="10.10.10.180"
-VM_USER="nixos"
+VM_IP=""
+VM_USER=""
 SSH_KEY="$HOME/.ssh/id_ed25519"
 SSH_PUB_KEY="$HOME/.ssh/id_ed25519.pub"
 
-log "🚀 Setting up SSH access to NixOS VM at $VM_IP"
+# Parse arguments
+if [[ $# -ne 2 ]]; then
+    error "Usage: $0 <VM_IP> <VM_USER>"
+fi
+
+VM_IP="$1"
+VM_USER="$2"
+
+log "🚀 Setting up SSH access to NixOS VM at $VM_IP for user $VM_USER"
 
 # Generate SSH key if it doesn't exist
 if [[ ! -f "$SSH_KEY" ]]; then
@@ -50,39 +58,24 @@ echo ""
 # Test VM connectivity
 log "Testing connectivity to VM..."
 if ! ping -c 1 -W 2 "$VM_IP" >/dev/null 2>&1; then
-    error "Cannot reach VM at $VM_IP. Is the VM running?"
+    error "Cannot reach VM at $VM_IP. Is the VM running and reachable?"
 fi
 
-# Check if sshpass is available for initial setup
-if ! command -v sshpass >/dev/null 2>&1; then
-    warn "sshpass not found. You'll need to manually copy the SSH key."
-    echo ""
-    echo "Manual setup instructions:"
-    echo "1. SSH to the VM manually: ssh $VM_USER@$VM_IP"
-    echo "2. Create .ssh directory: mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-    echo "3. Add your public key to authorized_keys:"
-    echo "   echo '$(cat "$SSH_PUB_KEY")' >> ~/.ssh/authorized_keys"
-    echo "4. Set permissions: chmod 600 ~/.ssh/authorized_keys"
-    echo ""
-    echo "After manual setup, test with: ssh $VM_USER@$VM_IP"
-    exit 0
-fi
-
-# Try to copy SSH key (requires VM password)
-log "Copying SSH key to $VM_USER@$VM_IP..."
-echo "Enter the VM password when prompted:"
-if ssh-copy-id -o StrictHostKeyChecking=no "$VM_USER@$VM_IP"; then
-    log "✅ SSH key successfully copied to VM"
-else
-    error "Failed to copy SSH key to VM"
-fi
+log "Please manually copy the SSH public key to the VM."
+log "You will need to log in to the VM and run the following commands:"
+echo ""
+echo "  mkdir -p ~/.ssh && chmod 700 ~/.ssh"
+echo "  echo '$(cat "$SSH_PUB_KEY")' >> ~/.ssh/authorized_keys"
+echo "  chmod 600 ~/.ssh/authorized_keys"
+echo ""
+read -p "Press Enter once the key has been copied..."
 
 # Test passwordless SSH
 log "Testing passwordless SSH access..."
-if ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$VM_USER@$VM_IP" "echo 'SSH access successful'" >/dev/null 2>&1; then
+if ssh -o ConnectTimeout=5 "$VM_USER@$VM_IP" "echo 'SSH access successful'" >/dev/null 2>&1; then
     log "✅ Passwordless SSH access working"
 else
-    error "Passwordless SSH access failed"
+    error "Passwordless SSH access failed. Please ensure the key was copied correctly."
 fi
 
 # Provide SSH config instructions
@@ -103,4 +96,4 @@ echo ""
 echo "Direct connection: ssh $VM_USER@$VM_IP"
 echo ""
 
-log "🎉 VM SSH access setup complete!"
+log "🎉 VM SSH access complete!"

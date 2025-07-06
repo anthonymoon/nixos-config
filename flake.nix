@@ -4,17 +4,14 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, agenix, disko, ... } @ inputs:
+  outputs = { self, nixpkgs, disko, ... } @ inputs:
     let
       system = "x86_64-linux";
       
@@ -33,8 +30,8 @@
           ./profiles/base.nix
           config
           ./disko-config.nix
-          agenix.nixosModules.default
-          disko.nixosModules.default
+          
+          
         ];
       };
       
@@ -62,11 +59,30 @@
         build-iso = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "build-iso" ''
+            set -euo pipefail
+            echo "🔨 Building custom NixOS ISO with SSH access..."
+            echo "================================================"
             cd ${./.}/iso
-            echo "Building custom NixOS ISO with SSH access..."
-            nix build --no-link --print-out-paths
-            echo "ISO built successfully!"
-            echo "Find it in the result/iso/ directory"
+            echo "📦 Starting build process..."
+            nix build . --extra-experimental-features "nix-command flakes"
+            
+            if [ -d "result" ]; then
+                echo "✅ Build completed successfully!"
+                echo ""
+                echo "📍 ISO location:"
+                ls -la result/iso/*.iso
+                echo ""
+                echo "📋 To use the ISO:"
+                echo "  - Copy to USB: sudo dd if=result/iso/*.iso of=/dev/sdX bs=4M status=progress"
+                echo "  - Boot VM: qemu-system-x86_64 -enable-kvm -m 2048 -cdrom result/iso/*.iso"
+                echo ""
+                echo "🔑 SSH access:"
+                echo "  - Root user has your SSH key pre-installed"
+                echo "  - Default passwords: root='nixos', nixos='nixos'"
+            else
+                echo "❌ Build failed!"
+                exit 1
+            fi
           '');
         };
       };
@@ -77,7 +93,7 @@
           git
           nixos-rebuild
           nix-tree
-          agenix.packages.${system}.default
+          
           disko.packages.${system}.default
         ];
         

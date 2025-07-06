@@ -108,20 +108,45 @@ setup_disko() {
 # Install NixOS
 install_nixos() {
     local config="$1"
-    local user="${INSTALL_USER:-amoon}"  # Use env var or default to "amoon"
-    
+    local config="$1"
+    local user
+    local password
+    local password_hash
+
+    # Prompt for username
+    while true; do
+        read -p "Enter username for the new system (e.g., amoon): " user_input
+        if [[ -n "$user_input" ]]; then
+            user="$user_input"
+            break
+        else
+            warn "Username cannot be empty."
+        fi
+    done
+
+    # Prompt for password
+    while true; do
+        read -s -p "Enter password for $user: " password_input
+        echo
+        read -s -p "Confirm password: " password_confirm
+        echo
+        if [[ "$password_input" == "$password_confirm" && -n "$password_input" ]]; then
+            password="$password_input"
+            break
+        else
+            warn "Passwords do not match or are empty. Please try again."
+        fi
+    done
+
     log "Installing NixOS with configuration: $config"
     log "Setting up user: $user"
-    
+
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
-    
-    # Generate random password for user (using /dev/urandom)
-    local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
-    
+
     # Hash password using modern nix run approach
-    local password_hash=$(nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s <<< "$password")
-    
+    password_hash=$(nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s <<< "$password")
+
     # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
 # NixOS Configuration - DO NOT EDIT
@@ -139,10 +164,6 @@ install_nixos() {
 }
 EOF
     
-    # Clear Nix evaluation cache for fresh installation (user and root)
-    rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
-    rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true
-    
     # Install with selected configuration using refresh flag
     # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
     if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org" --refresh; then
@@ -151,17 +172,12 @@ EOF
     
     log "NixOS installation completed successfully ✓"
     
-    # Post-installation cleanup
-    log "Cleaning up installation artifacts..."
-    rm -rf ~/.cache/nix/eval-cache-v* 2>/dev/null || true
-    rm -rf /root/.cache/nix/eval-cache-v* 2>/dev/null || true
-    
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
-    echo -e "${GREEN}  🔑 LOGIN CREDENTIALS${NC}"
+    echo -e "${GREEN}  🎉 INSTALLATION COMPLETE${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${BLUE}Username:${NC} $user"
-    echo -e "${BLUE}Password:${NC} $password"
+    echo -e "${BLUE}BLUE}Password: (set during installation)${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
     log "SSH key will be automatically generated on first boot"

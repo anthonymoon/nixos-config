@@ -34,19 +34,18 @@
       logReversePathDrops = true;
       logRefusedConnections = true;
       logRefusedPackets = true;
-      
-      extraCommands = ''
+
+      allowedTCPPorts = [ 22 ];
+      extraInputRules = ''
         # Rate limiting for SSH
-        iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --set
-        iptables -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 4 -j DROP
+        -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --set
+        -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 4 -j DROP
         
         # Drop invalid packets
-        iptables -A INPUT -m conntrack --ctstate INVALID -j DROP
-        
-        # Allow loopback
-        iptables -A INPUT -i lo -j ACCEPT
-        iptables -A OUTPUT -o lo -j ACCEPT
+        -A INPUT -m conntrack --ctstate INVALID -j DROP
       '';
+      
+      
     };
     
     # Security kernel parameters
@@ -142,12 +141,7 @@
       ];
     };
     
-    # Log monitoring
-    services.journald.extraConfig = ''
-      SystemMaxUse=1G
-      MaxRetentionSec=7day
-      ForwardToSyslog=yes
-    '';
+    
     
     # AIDE configuration (manual setup required)
     # AIDE is included in the main systemPackages list above

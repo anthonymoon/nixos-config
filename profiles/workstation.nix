@@ -93,11 +93,7 @@
     extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
   };
 
-  # Enable modules
-  modules = {
-    gaming.enable = true;
-    development.enable = true;
-  };
+  
 
   # Workstation-specific directory setup
   systemd.tmpfiles.rules = [

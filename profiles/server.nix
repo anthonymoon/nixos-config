@@ -94,11 +94,7 @@
     "fs.inotify.max_user_watches" = 524288;
   };
 
-  # Enable optional modules (disabled by default)
-  modules = {
-    security.enable = true;
-    media-server.enable = false;  # Enable manually if needed
-  };
+  
   
   # Production-ready firewall configuration
   networking.firewall = {
