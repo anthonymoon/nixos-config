@@ -137,7 +137,7 @@
     zramSwap = {
       enable = true;
       # Use 50% of physical RAM for the ZRAM device size.
-      percentage = 50;
+      memoryPercent = 50;
       # Higher priority makes the system prefer ZRAM swap.
       priority = 100;
     };
