@@ -48,7 +48,7 @@
         install-vm = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-vm" ''
-            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/6737dbc53a1a5bb63de50e760e983c5783d780ab"
+            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config/818bb30f8689232fad705a04448cfedea01a53d4"
             ${./install/install.sh} vm
           '');
         };
