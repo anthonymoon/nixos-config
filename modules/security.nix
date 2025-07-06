@@ -101,7 +101,6 @@
       chkrootkit
       clamav
       lynis
-      rkhunter
     ];
     
     # Automatic security updates (already configured in server profile)
