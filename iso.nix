@@ -31,11 +31,9 @@ in
   # Enable NetworkManager for easier network configuration
   networking.networkmanager.enable = true;
   
-  # Ensure DHCP is enabled
-  networking.useDHCP = true;
+  # Ensure DHCP is enabled (NetworkManager will handle it)
+  networking.useDHCP = lib.mkForce false; # Let NetworkManager handle DHCP
   networking.useNetworkd = false;
-  networking.dhcpcd.enable = true;
-  networking.dhcpcd.wait = "background";
   
   # Enable experimental features by default
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
