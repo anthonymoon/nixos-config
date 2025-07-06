@@ -128,9 +128,10 @@ in {
           };
         };
       };
+      
     };
     
-    # qBittorrent service (using systemd)
+    # qBittorrent service (using systemd - no native NixOS service available)
     systemd.services.qbittorrent = {
       description = "qBittorrent Daemon";
       after = [ "network.target" ];
@@ -153,7 +154,7 @@ in {
       };
     };
     
-    # Jellyseerr service (using docker)
+    # Jellyseerr service (using docker - no native NixOS service available)
     virtualisation.oci-containers.containers.jellyseerr = {
       image = "fallenbagel/jellyseerr:latest";
       ports = [ "${toString ports.jellyseerr}:5055" ];

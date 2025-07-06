@@ -172,13 +172,15 @@ mount_filesystems() {
 # Install NixOS
 install_nixos() {
     local config="$1"
+    local user="${INSTALL_USER:-amoon}"  # Use env var or default to "amoon"
     
     log "Installing NixOS with configuration: $config"
+    log "Setting up user: $user"
     
     # Generate hardware config and create custom configuration
     nixos-generate-config --root /mnt
     
-    # Generate random password for user amoon (using /dev/urandom)
+    # Generate random password for user (using /dev/urandom)
     local password=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 8)
     
     # Hash password using mkpasswd from whois package
@@ -195,7 +197,7 @@ install_nixos() {
   ];
   
   # User password configuration
-  users.users.amoon = {
+  users.users.$user = {
     hashedPassword = "$password_hash";
   };
   
@@ -221,24 +223,24 @@ EOF
     
     # Set up user shell in chroot
     if nixos-enter --root /mnt -- command -v zsh >/dev/null 2>&1; then
-        nixos-enter --root /mnt -- chsh -s "$(nixos-enter --root /mnt -- which zsh)" amoon || warn "Failed to set zsh as default shell"
+        nixos-enter --root /mnt -- chsh -s "$(nixos-enter --root /mnt -- which zsh)" "$user" || warn "Failed to set zsh as default shell"
     fi
     
     # Generate SSH key for user
-    if [[ ! -f /mnt/home/amoon/.ssh/id_ed25519 ]]; then
-        log "Generating SSH key for user amoon..."
-        nixos-enter --root /mnt -- sudo -u amoon mkdir -p /home/amoon/.ssh
-        nixos-enter --root /mnt -- sudo -u amoon ssh-keygen -t ed25519 -f /home/amoon/.ssh/id_ed25519 -N "" -C "amoon@nixos"
-        nixos-enter --root /mnt -- sudo -u amoon chmod 700 /home/amoon/.ssh
-        nixos-enter --root /mnt -- sudo -u amoon chmod 600 /home/amoon/.ssh/id_ed25519
-        nixos-enter --root /mnt -- sudo -u amoon chmod 644 /home/amoon/.ssh/id_ed25519.pub
+    if [[ ! -f "/mnt/home/$user/.ssh/id_ed25519" ]]; then
+        log "Generating SSH key for user $user..."
+        nixos-enter --root /mnt -- sudo -u "$user" mkdir -p "/home/$user/.ssh"
+        nixos-enter --root /mnt -- sudo -u "$user" ssh-keygen -t ed25519 -f "/home/$user/.ssh/id_ed25519" -N "" -C "$user@nixos"
+        nixos-enter --root /mnt -- sudo -u "$user" chmod 700 "/home/$user/.ssh"
+        nixos-enter --root /mnt -- sudo -u "$user" chmod 600 "/home/$user/.ssh/id_ed25519"
+        nixos-enter --root /mnt -- sudo -u "$user" chmod 644 "/home/$user/.ssh/id_ed25519.pub"
     fi
     
     # Configuration-specific setup
     case "$config" in
         "workstation")
             log "Setting up workstation-specific configurations..."
-            nixos-enter --root /mnt -- sudo -u amoon mkdir -p /home/amoon/Development /home/amoon/Projects /home/amoon/Downloads || warn "Failed to create directories"
+            nixos-enter --root /mnt -- sudo -u "$user" mkdir -p "/home/$user/Development" "/home/$user/Projects" "/home/$user/Downloads" || warn "Failed to create directories"
             ;;
         "server")
             log "Setting up server-specific configurations..."
@@ -271,15 +273,15 @@ LOGROTATE_EOF
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${GREEN}  🔑 LOGIN CREDENTIALS${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
-    echo -e "${BLUE}Username:${NC} amoon"
+    echo -e "${BLUE}Username:${NC} $user"
     echo -e "${BLUE}Password:${NC} $password"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
     
     # Display SSH public key if generated
-    if [[ -f /mnt/home/amoon/.ssh/id_ed25519.pub ]]; then
+    if [[ -f "/mnt/home/$user/.ssh/id_ed25519.pub" ]]; then
         echo -e "${BLUE}SSH Public Key (add to GitHub/servers):${NC}"
-        cat /mnt/home/amoon/.ssh/id_ed25519.pub
+        cat "/mnt/home/$user/.ssh/id_ed25519.pub"
         echo ""
     fi
 }

@@ -30,21 +30,22 @@ Three carefully crafted profiles optimized for specific use cases:
 # Interactive installer (recommended)
 sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install
 
-# Direct installation by profile
-sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-vm
-sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-workstation
-sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install-server
+# Direct installation with profile argument
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install vm
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install workstation
+sudo nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file github:anthonymoon/nixos-config#install server
 ```
 
 ### Complete Installation
 
-The installation process now includes integrated post-installation setup:
+The installation process now includes integrated setup with customizable username:
 
-- **User setup**: Creates user 'amoon' with secure password
+- **User setup**: Creates user (default 'amoon', customizable with `INSTALL_USER`) with secure password
 - **SSH key generation**: Automatic ED25519 key creation
 - **Shell configuration**: Sets up Zsh as default shell
 - **Directory structure**: Creates profile-specific directories
 - **System optimization**: Cleanup and store optimization
+- **Agenix integration**: Secret management system enabled
 
 ## 📋 Profile Comparison
 
@@ -120,8 +121,9 @@ This repository includes a production-grade testing pipeline designed for Test-D
 ./tests/test-runner.sh baseline        # Create test baseline snapshot
 
 # TDD workflow
-./tests/tdd-workflow.sh cycle          # Complete RED-GREEN-REFACTOR cycle
+./tests/tdd-workflow.sh quick          # Quick syntax and build tests
 ./tests/tdd-workflow.sh watch          # Auto-test on file changes
+./tests/tdd-workflow.sh full           # Comprehensive test suite
 ```
 
 ### Test Results ✅
@@ -225,11 +227,14 @@ sudo nix-collect-garbage --delete-old
 ### TDD Workflow
 
 ```bash
-# Start TDD cycle (RED-GREEN-REFACTOR)
-./tests/tdd-workflow.sh cycle
+# Quick validation during development
+./tests/tdd-workflow.sh quick
 
-# Watch for changes and auto-test
+# Continuous testing (watch for changes)
 ./tests/tdd-workflow.sh watch
+
+# Full test suite
+./tests/tdd-workflow.sh full
 
 # Create test baseline after major changes
 ./tests/test-runner.sh baseline

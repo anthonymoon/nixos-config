@@ -4,13 +4,13 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    # agenix = {
-    #   url = "github:ryantm/agenix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, ... } @ inputs:
+  outputs = { self, nixpkgs, agenix, ... } @ inputs:
     let
       system = "x86_64-linux";
       
@@ -28,7 +28,7 @@
         modules = [
           ./profiles/base.nix
           config
-          # agenix.nixosModules.default
+          agenix.nixosModules.default
         ];
       };
       
@@ -36,34 +36,13 @@
       # Generate all system configurations
       nixosConfigurations = nixpkgs.lib.mapAttrs mkSystem configurations;
       
-      # Single installer for all configurations
+      # Universal installer - user can select profile interactively or via arguments
       apps.${system} = {
         install = {
           type = "app";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install" ''
             export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
             exec ${./install/install.sh} "$@"
-          '');
-        };
-        install-vm = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-vm" ''
-            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
-            ${./install/install.sh} vm
-          '');
-        };
-        install-workstation = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-workstation" ''
-            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
-            ${./install/install.sh} workstation
-          '');
-        };
-        install-server = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install-server" ''
-            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
-            ${./install/install.sh} server
           '');
         };
       };
@@ -74,7 +53,7 @@
           git
           nixos-rebuild
           nix-tree
-          # agenix.packages.${system}.default  # Disabled - uncomment when secrets are needed
+          agenix.packages.${system}.default
         ];
         
         shellHook = ''
