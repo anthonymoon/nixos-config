@@ -107,7 +107,7 @@ setup_disko() {
     umount -R /mnt 2>/dev/null || true
     
     # Run Disko to partition and mount the disk
-    # This will use the disko-config.nix for auto-detection and Btrfs setup
+    # This will use the disko-config.nix for auto-detection and BTRFS setup
     if ! nix run --extra-experimental-features "nix-command flakes" --no-write-lock-file "${FLAKE_URI}#disko" -- --mode disko --flake "${FLAKE_URI}#default"; then
         error "Disko partitioning failed"
     fi
@@ -166,7 +166,7 @@ install_nixos() {
     nixos-generate-config --root /mnt --no-filesystems
 
     # Hash password using modern nix run approach
-    password_hash=$(nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s <<< "$password")
+    password_hash=$(echo "$password" | nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s)
 
     # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
