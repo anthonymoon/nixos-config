@@ -1,4 +1,4 @@
-# Disko configuration for automatic disk detection and Btrfs setup
+# Disko configuration for automatic disk detection and XFS setup
 # This configuration will be imported by NixOS modules
 {
   disko.devices = {
@@ -55,35 +55,19 @@
               };
             };
 
-            # The main Btrfs partition for the system.
+            # The main XFS partition for the system.
             root = {
               size = "100%";
               content = {
-                type = "btrfs";
-                # Global mount options for the entire Btrfs filesystem.
-                # Optimized for modern SSDs and virtual disks.
+                type = "filesystem";
+                format = "xfs";
+                mountpoint = "/";
+                # XFS mount options optimized for modern systems
                 mountOptions = [
-                  "compress=zstd" # Use Zstandard compression globally
-                  "ssd"           # Indicate it's a Solid State Drive (safe for most modern VMs)
-                  "discard=async" # Enable asynchronous TRIM for better performance
-                  "noatime"       # Reduce writes by not updating file access times
+                  "defaults"
+                  "noatime"      # Reduce writes by not updating file access times
+                  "nodiratime"   # Don't update directory access times
                 ];
-                subvolumes = {
-                  # Subvolume for the root filesystem.
-                  "@" = { mountpoint = "/"; };
-
-                  # Subvolume for home directories.
-                  "@home" = { mountpoint = "/home"; };
-
-                  # Subvolume for the Nix store.
-                  "@nix" = { mountpoint = "/nix"; };
-
-                  # Subvolume for logs.
-                  "@log" = { mountpoint = "/var/log"; };
-
-                  # A dedicated subvolume for snapshots.
-                  "@snapshots" = {};
-                };
               };
             };
           };

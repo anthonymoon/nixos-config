@@ -4,7 +4,6 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,9 +28,6 @@
         modules = [
           ./profiles/base.nix
           config
-          ./disko-config.nix
-          
-          
         ];
       };
       
@@ -53,6 +49,15 @@
         disko = {
           type = "app";
           program = "${disko.packages.${system}.default}/bin/disko";
+        };
+        
+        # Run tests
+        test = {
+          type = "app";
+          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "test" ''
+            cd tests
+            exec ./run-tests.sh "$@"
+          '');
         };
         
         # Build custom ISO with SSH access
@@ -105,7 +110,6 @@
           git
           nixos-rebuild
           nix-tree
-          
           disko.packages.${system}.default
         ];
         
@@ -122,23 +126,19 @@
         '';
       };
       
-# Disko configuration for disk partitioning
+      # Disko configuration for disk partitioning
       diskoConfigurations.default = import ./disko-config.nix;
       
-      # Integration tests using nixos-tests framework
+      # Integration tests using modern testers.runNixOSTest pattern
       checks.${system} = 
         let
-          pkgs = nixpkgs.legacyPackages.${system};
-          testSuite = import ./tests.nix { 
-            inherit pkgs; 
-            lib = nixpkgs.lib;
-          };
-        in {
-          vm-test = testSuite.vm-test;
-          workstation-test = testSuite.workstation-test;
-          server-test = testSuite.server-test;
-          network-test = testSuite.network-test;
-        };
+          # Import test suites
+          integrationTests = import ./tests/integration-tests.nix { inherit self; };
+          deploymentTests = import ./tests/deployment-tests.nix { inherit self; };
+          
+          # Combine all tests
+          allTests = integrationTests // deploymentTests;
+        in allTests;
 
       # Expose configurations for easy access
       packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {
