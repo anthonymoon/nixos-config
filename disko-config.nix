@@ -5,9 +5,17 @@
     disk = {
       main = {
         type = "disk";
-        # Auto-detect the primary disk at runtime
-        # Disko will handle device detection during installation
-        device = "/dev/disk/by-id/AUTO"; # Placeholder - disko auto-detects
+        # Use a script to auto-detect the primary disk at runtime
+        # This will be the first available disk that's not a CD-ROM
+        device = builtins.head (
+          builtins.filter (dev: builtins.pathExists dev) [
+            "/dev/vda"      # QEMU/KVM virtual disk (most common)
+            "/dev/sda"      # SATA/SCSI disk  
+            "/dev/nvme0n1"  # NVMe disk
+            "/dev/xvda"     # Xen virtual disk
+            "/dev/hda"      # IDE disk (legacy)
+          ]
+        );
         content = {
           type = "gpt";
           partitions = {

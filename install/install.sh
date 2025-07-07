@@ -5,6 +5,8 @@
 # This script is designed to be run from the NixOS installer environment.
 # It automates the entire installation process, from disk partitioning
 # to NixOS installation, using a declarative flake-based approach.
+#
+# shellcheck disable=SC2126  # wc -l is intentional for disk counting
 
 set -euo pipefail
 
@@ -56,7 +58,7 @@ select_config() {
     echo "────────────────────────────────────────"
     
     while true; do
-        read -p "Select a configuration [vm/workstation/server]: " choice
+        read -r -p "Select a configuration [vm/workstation/server]: " choice
         case "$choice" in
             vm|workstation|server)
                 echo "$choice"
@@ -76,7 +78,8 @@ detect_disk() {
     lsblk -d -o NAME,SIZE,TYPE,MODEL | grep -E "disk|nvme" | grep -v -E "rom|loop" || true
     
     # Check if we have any valid disks
-    local disk_count=$(lsblk -d -o TYPE | grep -E "disk|nvme" | grep -v -E "rom|loop" | wc -l)
+    local disk_count
+    disk_count=$(lsblk -d -o TYPE | grep -E "disk|nvme" | grep -v -E "rom|loop" | wc -l || echo "0")
     if [[ "$disk_count" -eq 0 ]]; then
         error "No suitable disks found for installation!"
     fi
@@ -98,7 +101,7 @@ detect_disk() {
     if [[ "${AUTO_CONFIRM:-}" != "yes" ]]; then
         warn "Disko will auto-detect and use the first available disk"
         warn "This will DESTROY ALL DATA on the selected disk!"
-        read -p "Continue with auto-detection? [y/N]: " confirm
+        read -r -p "Continue with auto-detection? [y/N]: " confirm
         [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
     fi
     
@@ -141,7 +144,7 @@ install_nixos() {
 
     # Prompt for username
     while true; do
-        read -p "Enter username for the new system (e.g., amoon): " user_input
+        read -r -p "Enter username for the new system (e.g., amoon): " user_input
         if [[ -n "$user_input" ]]; then
             user="$user_input"
             break
@@ -152,9 +155,9 @@ install_nixos() {
 
     # Prompt for password
     while true; do
-        read -s -p "Enter password for $user: " password_input
+        read -r -s -p "Enter password for $user: " password_input
         echo
-        read -s -p "Confirm password: " password_confirm
+        read -r -s -p "Confirm password: " password_confirm
         echo
         if [[ "$password_input" == "$password_confirm" && -n "$password_input" ]]; then
             password="$password_input"
