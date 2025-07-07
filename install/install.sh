@@ -173,19 +173,52 @@ install_nixos() {
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
 
-    # Hash password using mkpasswd from the whois package
+    # Hash password using mkpasswd from the mkpasswd package
     password_hash=$(nix shell nixpkgs#mkpasswd --no-write-lock-file -c mkpasswd -m sha-512 "$password")
 
-    # Install with selected configuration, passing user/pass as arguments
-    # The flake handles the entire system configuration, including user setup.
+    # Create user-specific configuration file
+    cat > /mnt/etc/nixos/user-config.nix << EOF
+# User configuration for installation
+{
+  username = "$user";
+  hashedPassword = "$password_hash";
+}
+EOF
+
+    # Create a configuration.nix that imports our flake profile
+    cat > /mnt/etc/nixos/configuration.nix << EOF
+# NixOS Configuration - Imports flake profile
+{ config, pkgs, lib, ... }:
+
+let
+  userConfig = import ./user-config.nix;
+  flakePath = "${FLAKE_URI}";
+  selectedProfile = "${config}";
+in
+{
+  imports = [
+    ./hardware-configuration.nix
+    (import (flakePath + "/profiles/base.nix") {
+      inherit config pkgs lib;
+      username = userConfig.username;
+      hashedPassword = userConfig.hashedPassword;
+    })
+    (import (flakePath + "/profiles/" + selectedProfile + ".nix") {
+      inherit config pkgs lib;
+      username = userConfig.username;
+    })
+  ];
+  
+  # Ensure the system is bootable
+  boot.loader.systemd-boot.enable = lib.mkForce true;
+  boot.loader.efi.canTouchEfiVariables = lib.mkForce true;
+}
+EOF
+
+    # Install with the generated configuration
     if ! nixos-install \
-        --flake "${FLAKE_URI}#$config" \
-        --argstr username "$user" \
-        --argstr hashedPassword "$password_hash" \
         --no-root-passwd \
-        --no-write-lock-file \
-        --option extra-substituters "https://cache.nixos.org" \
-        --refresh; then
+        --option extra-substituters "https://cache.nixos.org"; then
         error "NixOS installation failed"
     fi
     
