@@ -165,8 +165,8 @@ install_nixos() {
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
 
-    # Hash password using modern nix run approach
-    password_hash=$(echo "$password" | nix run nixpkgs#whois --no-write-lock-file -- mkpasswd -m sha-512 -s)
+    # Hash password using mkpasswd from whois package
+    password_hash=$(nix shell nixpkgs#whois --no-write-lock-file -c mkpasswd -m sha-512 "$password")
 
     # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
