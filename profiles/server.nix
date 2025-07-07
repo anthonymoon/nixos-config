@@ -1,5 +1,5 @@
 # Server Profile - Headless server with hardware support
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, username, ... }:
 
 {
   imports = [
@@ -84,7 +84,10 @@
     autoPrune.enable = true;
     autoPrune.dates = "weekly";
   };
-  users.users.${config.myUser.username}.extraGroups = [ "docker" ];
+  # Add the user to docker group only if username is provided
+  users.users = lib.mkIf (username != null) {
+    ${username}.extraGroups = [ "docker" ];
+  };
 
   # Server performance optimizations
   boot.kernel.sysctl = {

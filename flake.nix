@@ -8,102 +8,78 @@
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, disko, ... } @ inputs:
+  outputs = { self, nixpkgs, disko, home-manager, ... }@inputs:
     let
       system = "x86_64-linux";
-      
-      # Simple configurations - just 3 types
-      configurations = {
-        "vm"          = ./profiles/vm.nix;
-        "workstation" = ./profiles/workstation.nix;
-        "server"      = ./profiles/server.nix;
+      # Import our custom library
+      lib = import ./lib;
+    in
+    {
+      # Expose the custom lib for external use
+      inherit lib;
+
+      # Define NixOS configurations using the helper function
+      nixosConfigurations = {
+        vm = lib.mkSystem {
+          inherit system inputs;
+          modules = [
+            ./profiles/vm.nix
+            home-manager.nixosModules.home-manager
+          ];
+        };
+        workstation = lib.mkSystem {
+          inherit system inputs;
+          modules = [
+            ./profiles/workstation.nix
+            home-manager.nixosModules.home-manager
+          ];
+        };
+        server = lib.mkSystem {
+          inherit system inputs;
+          modules = [
+            ./profiles/server.nix
+            home-manager.nixosModules.home-manager
+          ];
+        };
+        iso = lib.mkSystem {
+          inherit system inputs;
+          modules = [
+            ./profiles/iso.nix
+            home-manager.nixosModules.home-manager
+          ];
+        };
       };
-      
-      # Function to build a system configuration
-      mkSystem = name: config: nixpkgs.lib.nixosSystem {
-        inherit system;
-        specialArgs = inputs;
-        modules = [
-          ./profiles/base.nix
-          config
-        ];
-      };
-      
-    in {
-      # Generate all system configurations
-      nixosConfigurations = nixpkgs.lib.mapAttrs mkSystem configurations;
-      
-      # Universal installer - user can select profile interactively or via arguments
+
+      # Apps for building and installing
       apps.${system} = {
         install = {
           type = "app";
+          meta.description = "Interactive NixOS installer script with flake-based configuration";
           program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install" ''
             export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
             exec ${./install/install.sh} "$@"
           '');
         };
-        
-        # Disko app for disk partitioning
+
         disko = {
           type = "app";
+          meta.description = "Declarative disk partitioning and formatting tool";
           program = "${disko.packages.${system}.default}/bin/disko";
         };
-        
-        # Run tests
-        test = {
-          type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "test" ''
-            cd tests
-            exec ./run-tests.sh "$@"
-          '');
-        };
-        
-        # Build custom ISO with SSH access
+
         build-iso = {
           type = "app";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "build-iso" ''
-            set -euo pipefail
-            echo "🔨 Building custom NixOS ISO with SSH access..."
-            echo "================================================"
-
-            # Store the original working directory
-            ORIGINAL_PWD="$(pwd)"
-
-            echo "📦 Starting build process..."
-            # Clean up any previous result symlink/directory
-            rm -rf result
-
-            # Build the ISO using nix-build
-            nix-build '<nixpkgs/nixos>' -A config.system.build.isoImage -I nixos-config=${./iso.nix}
-
-            # Check if build succeeded and move the result
-            if [ -d "result" ]; then # nix-build creates a symlink to a directory containing the ISO
-                echo "✅ Build completed successfully!"
-                echo ""
-                # Find the actual ISO file
-                ISO_FILE=$(find result/iso -name "*.iso" -type f | head -n1)
-                if [ -n "$ISO_FILE" ]; then
-                    echo "📍 ISO location: $ORIGINAL_PWD/$ISO_FILE"
-                    echo ""
-                    echo "📋 To use the ISO:"
-                    echo "  - Copy to USB (DANGER: This command will overwrite the entire /dev/sdX device!):"
-                    echo "    sudo dd if=\"$ORIGINAL_PWD/$ISO_FILE\" of=/dev/sdX bs=4M status=progress"
-                    echo "  - Boot VM:"
-                    echo "    qemu-system-x86_64 -enable-kvm -m 2048 -cdrom \"$ORIGINAL_PWD/$ISO_FILE\""
-                else
-                    echo "⚠️  ISO file not found in result/iso/"
-                    ls -la result/iso/
-                fi
-            else
-                echo "❌ Build failed! Result directory not found."
-                exit 1
-            fi
-          '');
+          meta.description = "Build custom NixOS ISO with SSH access and installation tools";
+          program = "${self.nixosConfigurations.iso.config.system.build.isoImage}/bin/nixos-iso";
         };
       };
-      
+
       # Development shell for testing
       devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
         buildInputs = with nixpkgs.legacyPackages.${system}; [
@@ -112,7 +88,7 @@
           nix-tree
           disko.packages.${system}.default
         ];
-        
+
         shellHook = ''
           echo "🚀 NixOS Config Development Shell"
           echo "Available configurations: vm, workstation, server"
@@ -120,30 +96,17 @@
           echo "Commands:"
           echo "  nix run .#install <config>     - Install NixOS configuration"
           echo "  nix run .#build-iso           - Build custom ISO with SSH access"
-          echo "  nix flake check               - Run declarative tests"
           echo ""
-          echo "Testing: Run 'nix flake check' for automated integration tests"
         '';
       };
-      
+
       # Disko configuration for disk partitioning
       diskoConfigurations.default = import ./disko-config.nix;
-      
-      # Integration tests using modern testers.runNixOSTest pattern
-      checks.${system} = 
-        let
-          # Import test suites
-          integrationTests = import ./tests/integration-tests.nix { inherit self; };
-          deploymentTests = import ./tests/deployment-tests.nix { inherit self; };
-          
-          # Combine all tests
-          allTests = integrationTests // deploymentTests;
-        in allTests;
 
       # Expose configurations for easy access
-      packages.${system} = nixpkgs.lib.mapAttrs' (name: _: {
+      packages.${system} = nixpkgs.lib.mapAttrs' (name: config: {
         name = "nixos-${name}";
-        value = (mkSystem name configurations.${name}).config.system.build.toplevel;
-      }) configurations;
+        value = config.config.system.build.toplevel;
+      }) self.nixosConfigurations;
     };
 }

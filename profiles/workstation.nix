@@ -1,5 +1,5 @@
 # Workstation Profile - Desktop with hardware support
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, username, ... }:
 
 {
   imports = [
@@ -46,9 +46,9 @@
         enable = true;
         wayland.enable = true;
       };
-      autoLogin = {
+      autoLogin = lib.mkIf (username != null) {
         enable = true;
-        user = config.myUser.username;
+        user = username;
       };
       defaultSession = "plasma";
     };
@@ -101,9 +101,9 @@
   
 
   # Workstation-specific directory setup
-  systemd.tmpfiles.rules = [
-    "d /home/${config.myUser.username}/Development 0755 ${config.myUser.username} users -"
-    "d /home/${config.myUser.username}/Projects 0755 ${config.myUser.username} users -"
-    "d /home/${config.myUser.username}/Downloads 0755 ${config.myUser.username} users -"
+  systemd.tmpfiles.rules = lib.mkIf (username != null) [
+    "d /home/${username}/Development 0755 ${username} users -"
+    "d /home/${username}/Projects 0755 ${username} users -"
+    "d /home/${username}/Downloads 0755 ${username} users -"
   ];
 }

@@ -1,19 +1,16 @@
 # Base Profile - Universal foundation for all systems
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  username,
+  hashedPassword,
+  ... # Allow other specialArgs to be passed
+}:
 
 {
-  imports = [
-    # Import user configuration if it exists (created during installation)
-    # Note: pathExists with absolute paths not allowed in pure evaluation
-  ];
-
-  options.myUser.username = lib.mkOption {
-    type = lib.types.str;
-    default = "amoon";
-    description = "Primary user for the system.";
-  };
-
-  config = {
+  # This configuration is applied only when a username is provided.
+  config = lib.mkIf (username != null) {
     # Boot configuration - works everywhere
     boot = {
       loader = {
@@ -44,17 +41,22 @@
     i18n.defaultLocale = "en_US.UTF-8";
 
     # Essential user setup
-    users.users.${config.myUser.username} = {
+    users.users.${username} = {
       isNormalUser = true;
       description = "Primary User";
       extraGroups = [ "wheel" "networkmanager" ];
       shell = pkgs.zsh;
+      # Use the passed-in hash if provided
+      hashedPassword = lib.mkIf (hashedPassword != null) hashedPassword;
       # Create SSH directory structure
       openssh.authorizedKeys.keys = [
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
       ];
       createHome = true;
     };
+
+    # Home Manager integration
+    home-manager.users.${username} = import ../modules/home.nix;
 
     # Security defaults
     security.sudo.wheelNeedsPassword = true;
@@ -93,19 +95,19 @@
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
-        User = config.myUser.username;
+        User = username;
         Group = "users";
         ExecStart = pkgs.writeShellScript "generate-ssh-key" ''
           set -euo pipefail
           
-          SSH_DIR="/home/${config.myUser.username}/.ssh"
+          SSH_DIR="/home/${username}/.ssh"
           SSH_KEY="$SSH_DIR/id_ed25519"
           
           # Only generate if key doesn't exist
           if [[ ! -f "$SSH_KEY" ]]; then
-            echo "Generating SSH key for ${config.myUser.username}..."
+            echo "Generating SSH key for ${username}..."
             mkdir -p "$SSH_DIR"
-            ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "${config.myUser.username}@nixos"
+            ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "${username}@nixos"
             chmod 700 "$SSH_DIR"
             chmod 600 "$SSH_KEY"
             chmod 644 "$SSH_KEY.pub"
@@ -141,7 +143,6 @@
       # Higher priority makes the system prefer ZRAM swap.
       priority = 100;
     };
-
 
     # State version - updated to 25.05
     system.stateVersion = "25.05";

@@ -1,5 +1,11 @@
-#!/usr/bin/env bash
+#!/usr/bin/env nix-shell
+#!nix-shell -i bash -p bash coreutils gnugrep gnused gawk findutils
 # Bulletproof NixOS Installer - Zero-Failure Architecture
+#
+# This script is designed to be run from the NixOS installer environment.
+# It automates the entire installation process, from disk partitioning
+# to NixOS installation, using a declarative flake-based approach.
+
 set -euo pipefail
 
 # Color output
@@ -129,7 +135,6 @@ setup_disko() {
 # Install NixOS
 install_nixos() {
     local config="$1"
-    local config="$1"
     local user
     local password
     local password_hash
@@ -165,29 +170,19 @@ install_nixos() {
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
 
-    # Hash password using mkpasswd from whois package
-    password_hash=$(nix shell nixpkgs#whois --no-write-lock-file -c mkpasswd -m sha-512 "$password")
+    # Hash password using mkpasswd from the whois package
+    password_hash=$(nix shell nixpkgs#mkpasswd --no-write-lock-file -c mkpasswd -m sha-512 "$password")
 
-    # Create configuration.nix that imports our flake and hardware config
-    cat > /mnt/etc/nixos/configuration.nix << EOF
-# NixOS Configuration - DO NOT EDIT
-# This configuration imports the selected profile from the flake
-# Edit the flake profiles directly instead of this file
-{
-  imports = [
-    ./hardware-configuration.nix
-  ];
-  
-  # User password configuration
-  users.users.$user = {
-    hashedPassword = "$password_hash";
-  };
-}
-EOF
-    
-    # Install with selected configuration using refresh flag
-    # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
-    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org" --refresh; then
+    # Install with selected configuration, passing user/pass as arguments
+    # The flake handles the entire system configuration, including user setup.
+    if ! nixos-install \
+        --flake "${FLAKE_URI}#$config" \
+        --argstr username "$user" \
+        --argstr hashedPassword "$password_hash" \
+        --no-root-passwd \
+        --no-write-lock-file \
+        --option extra-substituters "https://cache.nixos.org" \
+        --refresh; then
         error "NixOS installation failed"
     fi
     
