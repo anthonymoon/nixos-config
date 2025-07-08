@@ -192,6 +192,24 @@ EOF
 
 let
   userConfig = import ./user-config.nix;
+  
+  # Profile-specific configuration based on selected profile
+  profileConfig = 
+    if "${config}" == "server" then {
+      # Server-specific minimal config
+      virtualisation.docker.enable = true;
+      users.users.\${userConfig.username}.extraGroups = [ "docker" ];
+    } else if "${config}" == "workstation" then {
+      # Workstation-specific minimal config
+      services.xserver.enable = true;
+      services.displayManager.sddm.enable = true;
+      services.desktopManager.plasma6.enable = true;
+      services.pipewire.enable = true;
+      security.rtkit.enable = true;
+      services.printing.enable = true;
+    } else {
+      # VM or basic config - no additional services
+    };
 in
 {
   imports = [
@@ -249,27 +267,13 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   
-  # Profile-specific configuration
-  imports = imports ++ (
-    if "${config}" == "server" then [
-      # Server-specific minimal config
-      { virtualisation.docker.enable = true; }
-      { users.users.\${userConfig.username}.extraGroups = [ "docker" ]; }
-    ] else if "${config}" == "workstation" then [
-      # Workstation-specific minimal config
-      { services.xserver.enable = true; }
-      { services.displayManager.sddm.enable = true; }
-      { services.desktopManager.plasma6.enable = true; }
-      { services.pipewire.enable = true; }
-      { security.rtkit.enable = true; }
-      { services.printing.enable = true; }
-    ] else [
-      # VM or basic config
-      { }
-    ]
-  );
-  
-  system.stateVersion = "25.05";
+  # Apply profile-specific configuration
+  config = lib.mkMerge [
+    profileConfig
+    {
+      system.stateVersion = "25.05";
+    }
+  ];
 }
 EOF
 
