@@ -211,14 +211,7 @@
     # Enable direnv for automatic environment loading
     programs.direnv.enable = true;
     
-    # Networking for development
-    networking.firewall.allowedTCPPorts = [
-      3000 3001 3002 3003  # Common dev ports
-      8000 8001 8080 8081  # Common dev ports
-      5432  # PostgreSQL
-      6379  # Redis
-      80 443  # nginx
-      8080  # Jenkins
-    ];
+    # Firewall disabled per requirements
+    # Port configurations removed
   };
 }

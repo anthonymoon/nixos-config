@@ -89,12 +89,9 @@ detect_disk() {
         log "Target disk will be: $target_disk"
     fi
     
-    if [[ "${AUTO_CONFIRM:-}" != "yes" ]]; then
-        warn "Disko will auto-detect and use the first available disk"
-        warn "This will DESTROY ALL DATA on the selected disk!"
-        read -p "Continue with auto-detection? [y/N]: " confirm
-        [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
-    fi
+    # Always proceed without confirmation
+    log "Auto-detecting and using the first available disk"
+    warn "This will DESTROY ALL DATA on the selected disk!"
     
     log "Proceeding with disk setup..."
 }
@@ -129,99 +126,14 @@ setup_disko() {
 # Install NixOS
 install_nixos() {
     local config="$1"
-    local user
-    local password
-    local password_hash
-
-    # Prompt for username
-    while true; do
-        read -p "Enter username for the new system (e.g., amoon): " user_input
-        if [[ -n "$user_input" ]]; then
-            user="$user_input"
-            break
-        else
-            warn "Username cannot be empty."
-        fi
-    done
-
-    # Prompt for password
-    while true; do
-        read -s -p "Enter password for $user: " password_input
-        echo
-        read -s -p "Confirm password: " password_confirm
-        echo
-        if [[ "$password_input" == "$password_confirm" && -n "$password_input" ]]; then
-            password="$password_input"
-            break
-        else
-            warn "Passwords do not match or are empty. Please try again."
-        fi
-    done
 
     log "Installing NixOS with configuration: $config"
-    log "Setting up user: $user"
+    log "Users will be created: root, nixos, amoon (with SSH keys)"
 
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
 
-    # Hash password using mkpasswd from whois package
-    password_hash=$(nix shell nixpkgs#whois --no-write-lock-file -c mkpasswd -m sha-512 "$password")
-
-    # Create user configuration file that will be imported by base.nix
-    cat > /mnt/etc/nixos/user-config.nix << EOF
-# User Configuration - Generated during installation
-{ config, pkgs, lib, ... }:
-
-{
-  # User account configuration
-  users.users.${user} = {
-    isNormalUser = true;
-    description = "Primary User";
-    extraGroups = [ "wheel" "networkmanager" ];
-    shell = pkgs.zsh;
-    hashedPassword = "${password_hash}";
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
-    ];
-    createHome = true;
-  };
-
-  # Home Manager integration for this user
-  home-manager.users.${user} = import ${FLAKE_URI}/modules/home.nix;
-
-  # Automatic SSH key generation service
-  systemd.services.generate-user-ssh-key = {
-    description = "Generate SSH key for ${user} on first boot";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "local-fs.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      User = "${user}";
-      Group = "users";
-      ExecStart = pkgs.writeShellScript "generate-ssh-key" ''
-        set -euo pipefail
-        
-        SSH_DIR="/home/${user}/.ssh"
-        SSH_KEY="\$SSH_DIR/id_ed25519"
-        
-        # Only generate if key doesn't exist
-        if [[ ! -f "\$SSH_KEY" ]]; then
-          echo "Generating SSH key for ${user}..."
-          mkdir -p "\$SSH_DIR"
-          \${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "\$SSH_KEY" -N "" -C "${user}@nixos"
-          chmod 700 "\$SSH_DIR"
-          chmod 600 "\$SSH_KEY"
-          chmod 644 "\$SSH_KEY.pub"
-          echo "SSH key generated successfully"
-        else
-          echo "SSH key already exists, skipping generation"
-        fi
-      '';
-    };
-  };
-}
-EOF
+    # No need to create user configuration - handled in base.nix
 
     # Create a minimal configuration.nix that just imports hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
@@ -251,8 +163,9 @@ EOF
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${GREEN}  🎉 INSTALLATION COMPLETE${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
-    echo -e "${BLUE}Username:${NC} $user"
-    echo -e "${BLUE}Password:${NC} (set during installation)"
+    echo -e "${BLUE}Users:${NC} root, nixos, amoon"
+    echo -e "${BLUE}SSH Key:${NC} Already configured for all users"
+    echo -e "${BLUE}Initial Password:${NC} Empty (set one after boot)"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
     log "SSH key will be automatically generated on first boot"
@@ -262,12 +175,14 @@ EOF
 
 # Main installation flow
 main() {
-    local config
+    if [[ $# -eq 0 ]]; then
+        error "No configuration profile specified. Usage: ./install.sh <profile>"
+    fi
+    local config="$1"
     
-    log "🚀 Starting bulletproof NixOS installation..."
+    log "🚀 Starting bulletproof NixOS installation for profile: $config..."
     
     check_installer
-    config=$(select_config "$@")
     detect_disk
     setup_disko
     install_nixos "$config"

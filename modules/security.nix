@@ -27,26 +27,8 @@
       };
     };
     
-    # Advanced firewall rules
-    networking.firewall = {
-      enable = true;
-      allowPing = false;
-      logReversePathDrops = true;
-      logRefusedConnections = true;
-      logRefusedPackets = true;
-
-      allowedTCPPorts = [ 22 ];
-      extraInputRules = ''
-        # Rate limiting for SSH
-        -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --set
-        -A INPUT -p tcp --dport 22 -m conntrack --ctstate NEW -m recent --update --seconds 60 --hitcount 4 -j DROP
-        
-        # Drop invalid packets
-        -A INPUT -m conntrack --ctstate INVALID -j DROP
-      '';
-      
-      
-    };
+    # Firewall disabled per requirements
+    # Advanced firewall rules removed
     
     # Security kernel parameters
     boot.kernel.sysctl = {

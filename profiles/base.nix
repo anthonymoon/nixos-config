@@ -9,8 +9,7 @@
 }:
 
 {
-  # Import user configuration if it exists
-  imports = lib.optional (builtins.pathExists /etc/nixos/user-config.nix) /etc/nixos/user-config.nix;
+  # No user configuration import needed - users defined here
 
   # This configuration is applied only when a username is provided.
   config = lib.mkMerge [
@@ -45,7 +44,7 @@
       # Networking - basic and reliable
       networking = {
         networkmanager.enable = true;
-        firewall.enable = true;
+        # firewall disabled in common.nix
         useDHCP = lib.mkForce true;
       };
 
@@ -54,7 +53,7 @@
       i18n.defaultLocale = "en_US.UTF-8";
 
       # Security defaults
-      security.sudo.wheelNeedsPassword = true;
+      # sudo configuration moved to users section
 
       # Essential packages - minimal but functional
       environment.systemPackages = with pkgs; [
@@ -68,16 +67,7 @@
         which
       ];
 
-      # Essential services
-      services.openssh = {
-        enable = true;
-        # Password authentication is enabled by default here for initial setup.
-        # This is overridden to 'false' in the security module for hardened systems.
-        settings = {
-          PasswordAuthentication = false;
-          PermitRootLogin = "no";
-        };
-      };
+      # SSH configuration handled in common.nix
 
       # Shell configuration
       programs.zsh.enable = true;
@@ -85,7 +75,7 @@
     # Nix configuration
     nix = {
       settings = {
-        experimental-features = [ "nix-command" "flakes" ];
+        # experimental features handled in common.nix
         auto-optimise-store = true;
       };
       gc = {
@@ -109,6 +99,16 @@
 
     # State version - updated to 25.05
     system.stateVersion = "25.05";
+    
+    # Users handled in common.nix
+    # Additional groups for specific users
+    users.users = {
+      nixos.extraGroups = [ "networkmanager" ];
+      amoon.extraGroups = [ "networkmanager" "docker" "libvirtd" "kvm" ];
+    };
+    
+    # Allow wheel users to use sudo without password
+    security.sudo.wheelNeedsPassword = false;
     }
   ];
 }

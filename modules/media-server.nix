@@ -210,14 +210,7 @@ in {
     # Add main user to media group
     users.users.${config.myUser.username}.extraGroups = [ "media" ];
     
-    # Networking
-    networking.firewall.allowedTCPPorts = [
-      ports.jellyfin
-      139 445  # Samba
-    ];
-    
-    networking.firewall.allowedUDPPorts = [
-      137 138  # Samba
-    ];
+    # Firewall disabled per requirements
+    # Port configurations removed
   };
 }

@@ -105,13 +105,8 @@
   
   
   # Production-ready firewall configuration
-  networking.firewall = {
-    enable = true;
-    allowedTCPPorts = [ 22 ];  # SSH only by default
-    allowedUDPPorts = [ ];
-    allowPing = false;
-    logReversePathDrops = true;
-  };
+  # Firewall disabled per requirements
+  # networking.firewall configuration removed
 
   # Server-specific directory setup
   systemd.tmpfiles.rules = [

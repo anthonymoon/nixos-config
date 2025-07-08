@@ -28,7 +28,7 @@
       nixosConfigurations = {
         vm = lib.mkSystem {
           inherit system inputs;
-          modules = [
+          modules = [ ./modules/common.nix
             ./profiles/vm.nix
             home-manager.nixosModules.home-manager
             disko.nixosModules.disko
@@ -37,7 +37,7 @@
         };
         workstation = lib.mkSystem {
           inherit system inputs;
-          modules = [
+          modules = [ ./modules/common.nix
             ./profiles/workstation.nix
             home-manager.nixosModules.home-manager
             disko.nixosModules.disko
@@ -46,7 +46,7 @@
         };
         server = lib.mkSystem {
           inherit system inputs;
-          modules = [
+          modules = [ ./modules/common.nix
             ./profiles/server.nix
             home-manager.nixosModules.home-manager
             disko.nixosModules.disko
@@ -55,7 +55,7 @@
         };
         iso = lib.mkSystem {
           inherit system inputs;
-          modules = [
+          modules = [ ./modules/common.nix
             ./profiles/iso.nix
             home-manager.nixosModules.home-manager
           ];
