@@ -35,16 +35,38 @@
             root = {
               size = "100%";
               content = {
-                type = "filesystem";
-                format = "btrfs";
-                mountpoint = "/";
-                # BTRFS mount options optimized for modern systems
-                mountOptions = [
-                  "defaults"
-                  "compress=zstd"  # Enable transparent compression
-                  "noatime"        # Reduce writes by not updating file access times
-                  "nodiratime"     # Don't update directory access times
-                ];
+                type = "btrfs";
+                extraArgs = [ "-f" ]; # Force creation, useful for re-running disko
+                subvolumes = {
+                  # Subvolume for the root filesystem.
+                  "@" = {
+                    mountpoint = "/";
+                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                  };
+
+                  # Subvolume for home directories.
+                  "@home" = {
+                    mountpoint = "/home";
+                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                  };
+
+                  # Subvolume for the Nix store.
+                  "@nix" = {
+                    mountpoint = "/nix";
+                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                  };
+
+                  # Subvolume for logs.
+                  "@log" = {
+                    mountpoint = "/var/log";
+                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                  };
+
+                  # A dedicated subvolume for snapshots.
+                  "@snapshots" = {
+                    mountpoint = "/.snapshots";
+                  };
+                };
               };
             };
           };
