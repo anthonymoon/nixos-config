@@ -185,37 +185,128 @@ install_nixos() {
 }
 EOF
 
-    # Create a configuration.nix that imports our flake profile
+    # Create a simple bootstrap configuration that will use the flake after installation
     cat > /mnt/etc/nixos/configuration.nix << EOF
-# NixOS Configuration - Imports flake profile
+# Bootstrap NixOS Configuration
 { config, pkgs, lib, ... }:
 
 let
   userConfig = import ./user-config.nix;
-  flakePath = "${FLAKE_URI}";
-  selectedProfile = "${config}";
 in
 {
   imports = [
     ./hardware-configuration.nix
-    (import (flakePath + "/profiles/base.nix") {
-      inherit config pkgs lib;
-      username = userConfig.username;
-      hashedPassword = userConfig.hashedPassword;
-    })
-    (import (flakePath + "/profiles/" + selectedProfile + ".nix") {
-      inherit config pkgs lib;
-      username = userConfig.username;
-    })
+  ];
+
+  # Boot configuration
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  
+  # Networking
+  networking.networkmanager.enable = true;
+  networking.firewall.enable = true;
+  
+  # Locale
+  time.timeZone = "UTC";
+  i18n.defaultLocale = "en_US.UTF-8";
+  
+  # User configuration
+  users.users.\${userConfig.username} = {
+    isNormalUser = true;
+    description = "Primary User";
+    extraGroups = [ "wheel" "networkmanager" ];
+    shell = pkgs.zsh;
+    hashedPassword = userConfig.hashedPassword;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+    ];
+  };
+  
+  # SSH
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin = "no";
+    };
+  };
+  
+  # Shell
+  programs.zsh.enable = true;
+  security.sudo.wheelNeedsPassword = true;
+  
+  # Essential packages
+  environment.systemPackages = with pkgs; [
+    vim git curl wget htop tree unzip which
   ];
   
-  # Ensure the system is bootable
-  boot.loader.systemd-boot.enable = lib.mkForce true;
-  boot.loader.efi.canTouchEfiVariables = lib.mkForce true;
+  # Nix configuration with flakes
+  nix.settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    auto-optimise-store = true;
+  };
+  
+  # Allow unfree packages
+  nixpkgs.config.allowUnfree = true;
+  
+  # Profile-specific configuration
+  imports = imports ++ (
+    if "${config}" == "server" then [
+      # Server-specific minimal config
+      { virtualisation.docker.enable = true; }
+      { users.users.\${userConfig.username}.extraGroups = [ "docker" ]; }
+    ] else if "${config}" == "workstation" then [
+      # Workstation-specific minimal config
+      { services.xserver.enable = true; }
+      { services.displayManager.sddm.enable = true; }
+      { services.desktopManager.plasma6.enable = true; }
+      { services.pipewire.enable = true; }
+      { security.rtkit.enable = true; }
+      { services.printing.enable = true; }
+    ] else [
+      # VM or basic config
+      { }
+    ]
+  );
+  
+  system.stateVersion = "25.05";
 }
 EOF
 
-    # Install with the generated configuration
+    # Create a post-installation script to switch to flake configuration
+    cat > /mnt/etc/nixos/switch-to-flake.sh << 'EOF'
+#!/bin/bash
+# Post-installation script to switch to flake configuration
+
+set -euo pipefail
+
+FLAKE_URI="github:anthonymoon/nixos-config"
+CONFIG_TYPE="$(cat /etc/nixos/selected-profile)"
+
+echo "Switching to flake configuration..."
+echo "Profile: $CONFIG_TYPE"
+
+# Clone the flake configuration
+cd /etc/nixos
+if [[ ! -d nixos-config ]]; then
+    git clone https://github.com/anthonymoon/nixos-config.git
+fi
+cd nixos-config
+
+# Switch to flake configuration
+sudo nixos-rebuild switch --flake ".#$CONFIG_TYPE"
+
+echo "Successfully switched to flake configuration!"
+echo "The system is now using the full flake-based configuration."
+EOF
+
+    # Store the selected profile for later use
+    echo "$config" > /mnt/etc/nixos/selected-profile
+    
+    # Make the script executable
+    chmod +x /mnt/etc/nixos/switch-to-flake.sh
+
+    # Install with the bootstrap configuration
     if ! nixos-install \
         --no-root-passwd \
         --option extra-substituters "https://cache.nixos.org"; then
@@ -229,11 +320,13 @@ EOF
     echo -e "${GREEN}  🎉 INSTALLATION COMPLETE${NC}"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${BLUE}Username:${NC} $user"
-    echo -e "${BLUE}BLUE}Password: (set during installation)${NC}"
+    echo -e "${BLUE}Password:${NC} (set during installation)"
+    echo -e "${BLUE}Configuration:${NC} $config (bootstrap)"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
     log "SSH key will be automatically generated on first boot"
-    log "Post-installation setup is now handled declaratively by NixOS"
+    log "After first boot, run: sudo /etc/nixos/switch-to-flake.sh"
+    log "This will switch to the full flake-based configuration"
     echo ""
 }
 
