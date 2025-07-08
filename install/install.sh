@@ -239,9 +239,9 @@ EOF
 }
 EOF
     
-    # Install with selected configuration using refresh flag
+    # Install with selected configuration
     # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
-    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org" --refresh; then
+    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org"; then
         error "NixOS installation failed"
     fi
     
