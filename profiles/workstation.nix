@@ -34,10 +34,9 @@
   
   # GPU support
   services.xserver.videoDrivers = [ "modesetting" ];
-  hardware.opengl = {
+  hardware.graphics = {
     enable = true;
-    driSupport = true;
-    driSupport32Bit = true;
+    enable32Bit = true;
   };
 
   # Desktop environment
