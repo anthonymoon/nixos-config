@@ -192,24 +192,6 @@ EOF
 
 let
   userConfig = import ./user-config.nix;
-  
-  # Profile-specific configuration based on selected profile
-  profileConfig = 
-    if "${config}" == "server" then {
-      # Server-specific minimal config
-      virtualisation.docker.enable = true;
-      users.users.\${userConfig.username}.extraGroups = [ "docker" ];
-    } else if "${config}" == "workstation" then {
-      # Workstation-specific minimal config
-      services.xserver.enable = true;
-      services.displayManager.sddm.enable = true;
-      services.desktopManager.plasma6.enable = true;
-      services.pipewire.enable = true;
-      security.rtkit.enable = true;
-      services.printing.enable = true;
-    } else {
-      # VM or basic config - no additional services
-    };
 in
 {
   imports = [
@@ -232,7 +214,8 @@ in
   users.users.\${userConfig.username} = {
     isNormalUser = true;
     description = "Primary User";
-    extraGroups = [ "wheel" "networkmanager" ];
+    extraGroups = [ "wheel" "networkmanager" ] ++ 
+      (lib.optionals ("${config}" == "server") [ "docker" ]);
     shell = pkgs.zsh;
     hashedPassword = userConfig.hashedPassword;
     openssh.authorizedKeys.keys = [
@@ -267,13 +250,18 @@ in
   # Allow unfree packages
   nixpkgs.config.allowUnfree = true;
   
-  # Apply profile-specific configuration
-  config = lib.mkMerge [
-    profileConfig
-    {
-      system.stateVersion = "25.05";
-    }
-  ];
+  # Profile-specific configuration
+  virtualisation.docker.enable = lib.mkIf ("${config}" == "server") true;
+  
+  # Workstation-specific services
+  services.xserver.enable = lib.mkIf ("${config}" == "workstation") true;
+  services.displayManager.sddm.enable = lib.mkIf ("${config}" == "workstation") true;
+  services.desktopManager.plasma6.enable = lib.mkIf ("${config}" == "workstation") true;
+  services.pipewire.enable = lib.mkIf ("${config}" == "workstation") true;
+  security.rtkit.enable = lib.mkIf ("${config}" == "workstation") true;
+  services.printing.enable = lib.mkIf ("${config}" == "workstation") true;
+  
+  system.stateVersion = "25.05";
 }
 EOF
 
