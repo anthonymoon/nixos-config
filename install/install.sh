@@ -1,13 +1,5 @@
-#!/usr/bin/env nix-shell
-#!nix-shell -i bash -p bash coreutils gnugrep gnused gawk findutils
+#!/usr/bin/env bash
 # Bulletproof NixOS Installer - Zero-Failure Architecture
-#
-# This script is designed to be run from the NixOS installer environment.
-# It automates the entire installation process, from disk partitioning
-# to NixOS installation, using a declarative flake-based approach.
-#
-# shellcheck disable=SC2126  # wc -l is intentional for disk counting
-
 set -euo pipefail
 
 # Color output
@@ -58,7 +50,7 @@ select_config() {
     echo "────────────────────────────────────────"
     
     while true; do
-        read -r -p "Select a configuration [vm/workstation/server]: " choice
+        read -p "Select a configuration [vm/workstation/server]: " choice
         case "$choice" in
             vm|workstation|server)
                 echo "$choice"
@@ -78,8 +70,7 @@ detect_disk() {
     lsblk -d -o NAME,SIZE,TYPE,MODEL | grep -E "disk|nvme" | grep -v -E "rom|loop" || true
     
     # Check if we have any valid disks
-    local disk_count
-    disk_count=$(lsblk -d -o TYPE | grep -E "disk|nvme" | grep -v -E "rom|loop" | wc -l || echo "0")
+    local disk_count=$(lsblk -d -o TYPE | grep -E "disk|nvme" | grep -v -E "rom|loop" | wc -l)
     if [[ "$disk_count" -eq 0 ]]; then
         error "No suitable disks found for installation!"
     fi
@@ -101,7 +92,7 @@ detect_disk() {
     if [[ "${AUTO_CONFIRM:-}" != "yes" ]]; then
         warn "Disko will auto-detect and use the first available disk"
         warn "This will DESTROY ALL DATA on the selected disk!"
-        read -r -p "Continue with auto-detection? [y/N]: " confirm
+        read -p "Continue with auto-detection? [y/N]: " confirm
         [[ "$confirm" =~ ^[Yy]$ ]] || error "Installation cancelled"
     fi
     
@@ -144,7 +135,7 @@ install_nixos() {
 
     # Prompt for username
     while true; do
-        read -r -p "Enter username for the new system (e.g., amoon): " user_input
+        read -p "Enter username for the new system (e.g., amoon): " user_input
         if [[ -n "$user_input" ]]; then
             user="$user_input"
             break
@@ -155,9 +146,9 @@ install_nixos() {
 
     # Prompt for password
     while true; do
-        read -r -s -p "Enter password for $user: " password_input
+        read -s -p "Enter password for $user: " password_input
         echo
-        read -r -s -p "Confirm password: " password_confirm
+        read -s -p "Confirm password: " password_confirm
         echo
         if [[ "$password_input" == "$password_confirm" && -n "$password_input" ]]; then
             password="$password_input"
@@ -173,135 +164,50 @@ install_nixos() {
     # Generate hardware config (Disko handles filesystem configuration)
     nixos-generate-config --root /mnt --no-filesystems
 
-    # Hash password using mkpasswd from the mkpasswd package
-    password_hash=$(nix shell nixpkgs#mkpasswd --no-write-lock-file -c mkpasswd -m sha-512 "$password")
+    # Hash password using mkpasswd from whois package
+    password_hash=$(nix shell nixpkgs#whois --no-write-lock-file -c mkpasswd -m sha-512 "$password")
 
-    # Create user-specific configuration file
-    cat > /mnt/etc/nixos/user-config.nix << EOF
-# User configuration for installation
-{
-  username = "$user";
-  hashedPassword = "$password_hash";
-}
-EOF
-
-    # Create a simple bootstrap configuration that will use the flake after installation
+    # Create configuration.nix that imports our flake and hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
-# Bootstrap NixOS Configuration
-{ config, pkgs, lib, ... }:
+# NixOS Configuration - DO NOT EDIT
+# This configuration imports the selected profile from the flake
+# Edit the flake profiles directly instead of this file
+{ config, pkgs, ... }:
 
-let
-  userConfig = import ./user-config.nix;
-in
 {
   imports = [
     ./hardware-configuration.nix
   ];
-
-  # Boot configuration
+  
+  # Basic system configuration required for installation
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
   
-  # Networking
-  networking.networkmanager.enable = true;
-  networking.firewall.enable = true;
-  
-  # Locale
-  time.timeZone = "UTC";
-  i18n.defaultLocale = "en_US.UTF-8";
-  
-  # User configuration
-  users.users.\${userConfig.username} = {
-    isNormalUser = true;
-    description = "Primary User";
-    extraGroups = [ "wheel" "networkmanager" ] ++ 
-      (lib.optionals ("${config}" == "server") [ "docker" ]);
-    shell = pkgs.zsh;
-    hashedPassword = userConfig.hashedPassword;
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
-    ];
+  # User password configuration
+  users.users.$user = {
+    hashedPassword = "$password_hash";
   };
   
-  # SSH
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      PermitRootLogin = "no";
-    };
-  };
-  
-  # Shell
-  programs.zsh.enable = true;
-  security.sudo.wheelNeedsPassword = true;
-  
-  # Essential packages
+  # Minimal system packages
   environment.systemPackages = with pkgs; [
-    vim git curl wget htop tree unzip which
+    vim
+    git
   ];
   
-  # Nix configuration with flakes
-  nix.settings = {
-    experimental-features = [ "nix-command" "flakes" ];
-    auto-optimise-store = true;
-  };
+  # Enable networking
+  networking.networkmanager.enable = true;
   
-  # Allow unfree packages
-  nixpkgs.config.allowUnfree = true;
+  # Set your time zone
+  time.timeZone = "UTC";
   
-  # Profile-specific configuration
-  virtualisation.docker.enable = lib.mkIf ("${config}" == "server") true;
-  
-  # Workstation-specific services
-  services.xserver.enable = lib.mkIf ("${config}" == "workstation") true;
-  services.displayManager.sddm.enable = lib.mkIf ("${config}" == "workstation") true;
-  services.desktopManager.plasma6.enable = lib.mkIf ("${config}" == "workstation") true;
-  services.pipewire.enable = lib.mkIf ("${config}" == "workstation") true;
-  security.rtkit.enable = lib.mkIf ("${config}" == "workstation") true;
-  services.printing.enable = lib.mkIf ("${config}" == "workstation") true;
-  
+  # This value determines the NixOS release with which your system is to be compatible
   system.stateVersion = "25.05";
 }
 EOF
-
-    # Create a post-installation script to switch to flake configuration
-    cat > /mnt/etc/nixos/switch-to-flake.sh << 'EOF'
-#!/bin/bash
-# Post-installation script to switch to flake configuration
-
-set -euo pipefail
-
-FLAKE_URI="github:anthonymoon/nixos-config"
-CONFIG_TYPE="$(cat /etc/nixos/selected-profile)"
-
-echo "Switching to flake configuration..."
-echo "Profile: $CONFIG_TYPE"
-
-# Clone the flake configuration
-cd /etc/nixos
-if [[ ! -d nixos-config ]]; then
-    git clone https://github.com/anthonymoon/nixos-config.git
-fi
-cd nixos-config
-
-# Switch to flake configuration
-sudo nixos-rebuild switch --flake ".#$CONFIG_TYPE"
-
-echo "Successfully switched to flake configuration!"
-echo "The system is now using the full flake-based configuration."
-EOF
-
-    # Store the selected profile for later use
-    echo "$config" > /mnt/etc/nixos/selected-profile
     
-    # Make the script executable
-    chmod +x /mnt/etc/nixos/switch-to-flake.sh
-
-    # Install with the bootstrap configuration
-    if ! nixos-install \
-        --no-root-passwd \
-        --option extra-substituters "https://cache.nixos.org"; then
+    # Install with selected configuration using refresh flag
+    # Use explicit fragment syntax to avoid parsePathFlakeRefWithFragment bug
+    if ! nixos-install --flake "${FLAKE_URI}#$config" --no-root-passwd --no-write-lock-file --option extra-substituters "https://cache.nixos.org" --refresh; then
         error "NixOS installation failed"
     fi
     
@@ -313,12 +219,10 @@ EOF
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${BLUE}Username:${NC} $user"
     echo -e "${BLUE}Password:${NC} (set during installation)"
-    echo -e "${BLUE}Configuration:${NC} $config (bootstrap)"
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo ""
     log "SSH key will be automatically generated on first boot"
-    log "After first boot, run: sudo /etc/nixos/switch-to-flake.sh"
-    log "This will switch to the full flake-based configuration"
+    log "Post-installation setup is now handled declaratively by NixOS"
     echo ""
 }
 
