@@ -31,6 +31,8 @@
           modules = [
             ./profiles/vm.nix
             home-manager.nixosModules.home-manager
+            disko.nixosModules.disko
+            ./disko-config.nix
           ];
         };
         workstation = lib.mkSystem {
@@ -38,6 +40,8 @@
           modules = [
             ./profiles/workstation.nix
             home-manager.nixosModules.home-manager
+            disko.nixosModules.disko
+            ./disko-config.nix
           ];
         };
         server = lib.mkSystem {
@@ -45,6 +49,8 @@
           modules = [
             ./profiles/server.nix
             home-manager.nixosModules.home-manager
+            disko.nixosModules.disko
+            ./disko-config.nix
           ];
         };
         iso = lib.mkSystem {

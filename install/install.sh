@@ -167,41 +167,75 @@ install_nixos() {
     # Hash password using mkpasswd from whois package
     password_hash=$(nix shell nixpkgs#whois --no-write-lock-file -c mkpasswd -m sha-512 "$password")
 
-    # Create configuration.nix that imports our flake and hardware config
+    # Create user configuration file that will be imported by base.nix
+    cat > /mnt/etc/nixos/user-config.nix << EOF
+# User Configuration - Generated during installation
+{ config, pkgs, lib, ... }:
+
+{
+  # User account configuration
+  users.users.${user} = {
+    isNormalUser = true;
+    description = "Primary User";
+    extraGroups = [ "wheel" "networkmanager" ];
+    shell = pkgs.zsh;
+    hashedPassword = "${password_hash}";
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+    ];
+    createHome = true;
+  };
+
+  # Home Manager integration for this user
+  home-manager.users.${user} = import ${FLAKE_URI}/modules/home.nix;
+
+  # Automatic SSH key generation service
+  systemd.services.generate-user-ssh-key = {
+    description = "Generate SSH key for ${user} on first boot";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "local-fs.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      User = "${user}";
+      Group = "users";
+      ExecStart = pkgs.writeShellScript "generate-ssh-key" ''
+        set -euo pipefail
+        
+        SSH_DIR="/home/${user}/.ssh"
+        SSH_KEY="\$SSH_DIR/id_ed25519"
+        
+        # Only generate if key doesn't exist
+        if [[ ! -f "\$SSH_KEY" ]]; then
+          echo "Generating SSH key for ${user}..."
+          mkdir -p "\$SSH_DIR"
+          \${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "\$SSH_KEY" -N "" -C "${user}@nixos"
+          chmod 700 "\$SSH_DIR"
+          chmod 600 "\$SSH_KEY"
+          chmod 644 "\$SSH_KEY.pub"
+          echo "SSH key generated successfully"
+        else
+          echo "SSH key already exists, skipping generation"
+        fi
+      '';
+    };
+  };
+}
+EOF
+
+    # Create a minimal configuration.nix that just imports hardware config
     cat > /mnt/etc/nixos/configuration.nix << EOF
-# NixOS Configuration - DO NOT EDIT
-# This configuration imports the selected profile from the flake
-# Edit the flake profiles directly instead of this file
-{ config, pkgs, ... }:
+# Minimal NixOS Configuration
+# This file is required by nixos-install but all configuration
+# is handled by the flake and user-config.nix
+{ config, pkgs, lib, ... }:
 
 {
   imports = [
     ./hardware-configuration.nix
   ];
   
-  # Basic system configuration required for installation
-  boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
-  
-  # User password configuration
-  users.users.$user = {
-    hashedPassword = "$password_hash";
-  };
-  
-  # Minimal system packages
-  environment.systemPackages = with pkgs; [
-    vim
-    git
-  ];
-  
-  # Enable networking
-  networking.networkmanager.enable = true;
-  
-  # Set your time zone
-  time.timeZone = "UTC";
-  
-  # This value determines the NixOS release with which your system is to be compatible
-  system.stateVersion = "25.05";
+  # Empty - all configuration handled by flake
 }
 EOF
     

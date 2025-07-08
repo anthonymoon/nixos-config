@@ -3,121 +3,76 @@
   config,
   lib,
   pkgs,
-  username,
-  hashedPassword,
+  username ? null,
+  hashedPassword ? null,
   ... # Allow other specialArgs to be passed
 }:
 
 {
+  # Import user configuration if it exists
+  imports = lib.optional (builtins.pathExists /etc/nixos/user-config.nix) /etc/nixos/user-config.nix;
+
   # This configuration is applied only when a username is provided.
-  config = lib.mkIf (username != null) {
-    # Boot configuration - works everywhere
-    boot = {
-      loader = {
-        systemd-boot = {
-          enable = true;
-          configurationLimit = 10;
+  config = lib.mkMerge [
+    # Always include base configuration
+    {
+      # Boot configuration - works everywhere
+      boot = {
+        loader = {
+          systemd-boot = {
+            enable = true;
+            configurationLimit = 10;
+          };
+          efi.canTouchEfiVariables = true;
         };
-        efi.canTouchEfiVariables = true;
+        
+        # Essential kernel modules
+        initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
+        kernelModules = [ ];
+        
+        # Safe kernel parameters
+        kernelParams = [ "quiet" "loglevel=3" ];
       };
-      
-      # Essential kernel modules
-      initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-      kernelModules = [ ];
-      
-      # Safe kernel parameters
-      kernelParams = [ "quiet" "loglevel=3" ];
-    };
 
-    # Networking - basic and reliable
-    networking = {
-      networkmanager.enable = true;
-      firewall.enable = true;
-      useDHCP = lib.mkForce true;
-    };
+      # Networking - basic and reliable
+      networking = {
+        networkmanager.enable = true;
+        firewall.enable = true;
+        useDHCP = lib.mkForce true;
+      };
 
-    # Locale and timezone
-    time.timeZone = lib.mkDefault "UTC";
-    i18n.defaultLocale = "en_US.UTF-8";
+      # Locale and timezone
+      time.timeZone = lib.mkDefault "UTC";
+      i18n.defaultLocale = "en_US.UTF-8";
 
-    # Essential user setup
-    users.users.${username} = {
-      isNormalUser = true;
-      description = "Primary User";
-      extraGroups = [ "wheel" "networkmanager" ];
-      shell = pkgs.zsh;
-      # Use the passed-in hash if provided
-      hashedPassword = lib.mkIf (hashedPassword != null) hashedPassword;
-      # Create SSH directory structure
-      openssh.authorizedKeys.keys = [
-        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      # Security defaults
+      security.sudo.wheelNeedsPassword = true;
+
+      # Essential packages - minimal but functional
+      environment.systemPackages = with pkgs; [
+        vim
+        git
+        curl
+        wget
+        htop
+        tree
+        unzip
+        which
       ];
-      createHome = true;
-    };
 
-    # Home Manager integration
-    home-manager.users.${username} = import ../modules/home.nix;
-
-    # Security defaults
-    security.sudo.wheelNeedsPassword = true;
-
-    # Essential packages - minimal but functional
-    environment.systemPackages = with pkgs; [
-      vim
-      git
-      curl
-      wget
-      htop
-      tree
-      unzip
-      which
-    ];
-
-    # Essential services
-    services.openssh = {
-      enable = true;
-      # Password authentication is enabled by default here for initial setup.
-      # This is overridden to 'false' in the security module for hardened systems.
-      settings = {
-        PasswordAuthentication = false;
-        PermitRootLogin = "no";
+      # Essential services
+      services.openssh = {
+        enable = true;
+        # Password authentication is enabled by default here for initial setup.
+        # This is overridden to 'false' in the security module for hardened systems.
+        settings = {
+          PasswordAuthentication = false;
+          PermitRootLogin = "no";
+        };
       };
-    };
 
-    # Shell configuration
-    programs.zsh.enable = true;
-
-    # Automatic SSH key generation service
-    systemd.services.generate-user-ssh-key = {
-      description = "Generate SSH key for user on first boot";
-      wantedBy = [ "multi-user.target" ];
-      after = [ "local-fs.target" ];
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        User = username;
-        Group = "users";
-        ExecStart = pkgs.writeShellScript "generate-ssh-key" ''
-          set -euo pipefail
-          
-          SSH_DIR="/home/${username}/.ssh"
-          SSH_KEY="$SSH_DIR/id_ed25519"
-          
-          # Only generate if key doesn't exist
-          if [[ ! -f "$SSH_KEY" ]]; then
-            echo "Generating SSH key for ${username}..."
-            mkdir -p "$SSH_DIR"
-            ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -C "${username}@nixos"
-            chmod 700 "$SSH_DIR"
-            chmod 600 "$SSH_KEY"
-            chmod 644 "$SSH_KEY.pub"
-            echo "SSH key generated successfully"
-          else
-            echo "SSH key already exists, skipping generation"
-          fi
-        '';
-      };
-    };
+      # Shell configuration
+      programs.zsh.enable = true;
 
     # Nix configuration
     nix = {
@@ -146,5 +101,6 @@
 
     # State version - updated to 25.05
     system.stateVersion = "25.05";
-  };
+    }
+  ];
 }
