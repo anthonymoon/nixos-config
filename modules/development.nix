@@ -10,7 +10,7 @@
     # Development packages
     environment.systemPackages = with pkgs; [
       # Version control
-      gh
+      gh  # GitHub CLI
       gitui
       
       # Editors and IDEs
@@ -18,10 +18,16 @@
       vim
       neovim
       
+      # AI Development Tools  
+      # claude-code - may not be in stable
+      # gemini - needs custom package
+      
       # Programming languages
       nodejs_22
-      python3
-      python3Packages.pip
+      nodePackages.npm
+      python312
+      python312Packages.pip
+      # python312Packages.uvx - may need pipx instead
       rustc
       cargo
       go
@@ -31,38 +37,66 @@
       cmake
       pkg-config
       
-      # Container tools
+      # Container & Virtualization tools
       docker
       docker-compose
       podman
+      qemu_full
+      libvirt
+      virt-manager
+      virt-viewer
+      spice-vdagent
       
       # Network tools
       curl
       wget
       httpie
+      socat
+      gnu-netcat
+      telnet
+      nmap
+      tcpdump
       
       # Database tools
       sqlite
       postgresql
+      redis
+      # chromadb - needs python package
       
-      # Cloud tools
-      awscli2
+      # Infrastructure as Code
       terraform
+      packer
+      argocd
+      jenkins
+      
+      # System tools
+      tuned
       
       # Monitoring
       btop
       iotop
+      multitail
+      
+      # Terminal multiplexers
+      tmux
+      zellij
+      screen
       
       # Development utilities
-      jq
-      yq
+      jq  # JSON processor
+      yq  # YAML processor
+      jg  # JSON grep
       tree
-      fd
-      ripgrep
-      fzf
+      fd  # Find alternative
+      ripgrep  # grep alternative
+      gawk  # GNU awk
+      fzf  # Fuzzy finder
       direnv
-      tmux
-      screen
+      zoxide  # Smart cd
+      # zinit - ZSH plugin manager, configured separately
+      
+      # VS Code Server support
+      # vscode-server - needs special handling
     ];
     
     
@@ -78,6 +112,15 @@
         host all all ::1/128 scram-sha-256
       '';
       
+    };
+    
+    # Enable nginx for development
+    services.nginx = {
+      enable = true;
+      recommendedProxySettings = true;
+      recommendedTlsSettings = true;
+      recommendedOptimisation = true;
+      recommendedGzipSettings = true;
     };
     
     # Enable Redis for development
@@ -102,8 +145,40 @@
       ${username}.extraGroups = [ 
         "docker" 
         "postgres"
+        "libvirtd"
+        "kvm"
       ];
     };
+    
+    # Enable libvirt for virtualization
+    virtualisation.libvirtd = {
+      enable = true;
+      qemu = {
+        package = pkgs.qemu_full;
+        runAsRoot = true;
+        swtpm.enable = true;
+        ovmf = {
+          enable = true;
+          packages = [ pkgs.OVMFFull.fd ];
+        };
+      };
+    };
+    
+    # Enable QEMU guest agent for VMs
+    services.qemuGuest.enable = true;
+    
+    # Enable tuned for performance optimization
+    services.tuned = {
+      enable = true;
+      recommendedProfile = "virtual-guest";
+    };
+    
+    # Install ChromaDB via Python
+    environment.systemPackages = with pkgs; [
+      (python312.withPackages (ps: with ps; [
+        chromadb
+      ]))
+    ];
     
     # Development shell configuration
     programs.zsh = {
@@ -125,6 +200,12 @@
         gd = "git diff";
         docker-clean = "docker system prune -af";
       };
+      initExtra = ''
+        # Initialize zoxide
+        eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
+        # Configure zinit if available
+        # source ${pkgs.zinit}/share/zinit/zinit.zsh
+      '';
     };
     
     # Enable direnv for automatic environment loading
@@ -136,6 +217,8 @@
       8000 8001 8080 8081  # Common dev ports
       5432  # PostgreSQL
       6379  # Redis
+      80 443  # nginx
+      8080  # Jenkins
     ];
   };
 }

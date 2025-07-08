@@ -6,7 +6,11 @@ in
   imports = [
     "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
     "${modulesPath}/installer/cd-dvd/channel.nix"
+    ../modules/development.nix
   ];
+  
+  # Enable development module
+  modules.development.enable = true;
 
   # ISO configuration
   isoImage.isoName = "nixos-custom-${pkgs.stdenv.hostPlatform.system}.iso";
@@ -74,5 +78,20 @@ in
     which
     ddrescue # More robust than dd for recovery
     rsync
+    # Additional virtualization tools for ISO
+    qemu_full
+    libvirt
+    virt-manager
+    virt-viewer
+    spice-vdagent
   ] ++ extraPackages;
+  
+  # Load KVM modules
+  boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+  
+  # Enable QEMU guest agent for when ISO runs as VM
+  services.qemuGuest.enable = true;
+  
+  # Set GRUB boot timeout for faster boot
+  boot.loader.timeout = lib.mkForce 3;
 }

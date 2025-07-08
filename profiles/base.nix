@@ -31,7 +31,15 @@
         kernelModules = [ ];
         
         # Safe kernel parameters
-        kernelParams = [ "quiet" "loglevel=3" ];
+        kernelParams = [ 
+          "quiet" 
+          "loglevel=3"
+          # Enable nested virtualization
+          "kvm_intel.nested=1"
+          "kvm_amd.nested=1"
+          "kvm.ignore_msrs=1"
+          "kvm.report_ignored_msrs=0"
+        ];
       };
 
       # Networking - basic and reliable
