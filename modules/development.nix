@@ -1,7 +1,7 @@
 # Development Environment Module
 # Essential development tools and services
 
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, username ? null, ... }:
 
 {
   options.modules.development.enable = lib.mkEnableOption "development environment";
@@ -98,10 +98,12 @@
     };
     
     # Add user to development groups
-    users.users.${config.myUser.username}.extraGroups = [ 
-      "docker" 
-      "postgres"
-    ];
+    users.users = lib.mkIf (username != null) {
+      ${username}.extraGroups = [ 
+        "docker" 
+        "postgres"
+      ];
+    };
     
     # Development shell configuration
     programs.zsh = {
