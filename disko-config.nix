@@ -1,4 +1,4 @@
-# Disko configuration for automatic disk detection and XFS setup
+# Disko configuration for automatic disk detection and BTRFS setup
 # This configuration will be imported by NixOS modules
 {
   disko.devices = {
@@ -31,17 +31,19 @@
               };
             };
 
-            # Main system partition using XFS
+            # The main BTRFS partition for the system.
             root = {
               size = "100%";
               content = {
                 type = "filesystem";
-                format = "xfs";
+                format = "btrfs";
                 mountpoint = "/";
+                # BTRFS mount options optimized for modern systems
                 mountOptions = [
                   "defaults"
-                  "noatime"      # Reduce writes by not updating file access times
-                  "nodiratime"   # Don't update directory access times
+                  "compress=zstd"  # Enable transparent compression
+                  "noatime"        # Reduce writes by not updating file access times
+                  "nodiratime"     # Don't update directory access times
                 ];
               };
             };
