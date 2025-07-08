@@ -20,7 +20,7 @@
       availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
       kernelModules = [ ];
     };
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [ "kvm-amd" "kvm-intel" ];
     extraModulePackages = [ ];
   };
 
@@ -30,6 +30,15 @@
   # Hardware settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  
+  # GPU support
+  services.xserver.videoDrivers = [ "modesetting" ];
+  hardware.opengl = {
+    enable = true;
+    driSupport = true;
+    driSupport32Bit = true;
+  };
 
   # Desktop environment
   services = {
