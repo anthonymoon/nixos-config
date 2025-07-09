@@ -595,57 +595,8 @@
     sambausers = {
       gid = 1002;
     };
-    sys = {
-      gid = 3;
-    };
-    network = {
-      gid = 90;
-    };
-    scanner = {
-      gid = 96;
-    };
-    wheel = {
-      gid = 998;
-    };
-    audio = {
-      gid = 996;
-    };
-    input = {
-      gid = 994;
-    };
-    kvm = {
-      gid = 992;
-    };
-    lp = {
-      gid = 991;
-    };
-    optical = {
-      gid = 990;
-    };
-    storage = {
-      gid = 987;
-    };
-    video = {
-      gid = 985;
-    };
-    users = {
-      gid = 984;
-    };
-    systemd-journal = {
-      gid = 982;
-    };
-    rfkill = {
-      gid = 981;
-    };
-    libvirt = {
-      gid = 960;
-    };
-    docker = {
-      gid = 958;
-    };
-    wireshark = {
-      gid = 150;
-    };
+    # Most system groups will use NixOS defaults to avoid conflicts
+    # Custom groups only where needed
   };
   
   users.users = {
