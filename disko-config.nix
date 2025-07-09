@@ -3,7 +3,7 @@
 {
   disko.devices = {
     disk = {
-      main = {
+      vda = {
         type = "disk";
         device = "/dev/vda";
         content = {
@@ -26,7 +26,6 @@
 
             # The main BTRFS partition for the system
             root = {
-              name = "disk-main-root";
               size = "100%";
               content = {
                 type = "btrfs";
