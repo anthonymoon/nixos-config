@@ -25,7 +25,7 @@ in
     enable = true;
     settings = {
       PermitRootLogin = "prohibit-password";
-      PasswordAuthentication = false;
+      PasswordAuthentication = lib.mkForce false;
     };
   };
   
