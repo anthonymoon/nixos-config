@@ -355,63 +355,65 @@
     samba = {
       enable = true;
       securityType = "user";
-      extraConfig = ''
-        # Optimized Samba configuration for 1GbE network and Time Machine
-        workgroup = WORKGROUP
-        netbios name = CACHY
-        
-        bind interfaces only = yes
-        interfaces = virbr0
-        
-        # Protocol optimization - Use latest SMB3 with all features
-        server min protocol = SMB3_00
-        server max protocol = SMB3_11
-        client min protocol = SMB3_00  
-        client max protocol = SMB3_11
-        
-        # Security - Disable signing for maximum performance (LAN only)
-        server signing = disabled
-        client signing = disabled
-        
-        # SMB3 Multichannel - CRITICAL for 10GbE performance  
-        server multi channel support = yes
-        # SMB3 Encryption with GnuTLS (3x performance improvement)
-        smb encrypt = desired
-        server smb encrypt = desired
-        
-        # Modern I/O optimizations
-        use sendfile = yes
-        aio read size = 16384
-        aio write size = 16384
-        aio write behind = yes
-        
-        # Memory and locking optimizations
-        kernel oplocks = no
-        level2 oplocks = yes
-        oplocks = yes
-        strict locking = no
-        
-        # Connection management
-        deadtime = 15
-        max smbd processes = 0
-        
-        # Time Machine optimizations
-        min receivefile size = 16384
-        getwd cache = yes
-        
-        # Logging (minimal for performance)
-        log level = 10
-        max log size = 1000
-        
-        # Case sensitivity optimization for large directories
-        case sensitive = true
-        default case = lower
-        preserve case = no
-        short preserve case = no
-        
-        # ZFS-specific optimizations
-        strict allocate = no
-      '';
+      settings = {
+        global = {
+          # Optimized Samba configuration for 1GbE network and Time Machine
+          workgroup = "WORKGROUP";
+          "netbios name" = "CACHY";
+          
+          "bind interfaces only" = "yes";
+          interfaces = "virbr0";
+          
+          # Protocol optimization - Use latest SMB3 with all features
+          "server min protocol" = "SMB3_00";
+          "server max protocol" = "SMB3_11";
+          "client min protocol" = "SMB3_00";
+          "client max protocol" = "SMB3_11";
+          
+          # Security - Disable signing for maximum performance (LAN only)
+          "server signing" = "disabled";
+          "client signing" = "disabled";
+          
+          # SMB3 Multichannel - CRITICAL for 10GbE performance  
+          "server multi channel support" = "yes";
+          # SMB3 Encryption with GnuTLS (3x performance improvement)
+          "smb encrypt" = "desired";
+          "server smb encrypt" = "desired";
+          
+          # Modern I/O optimizations
+          "use sendfile" = "yes";
+          "aio read size" = "16384";
+          "aio write size" = "16384";
+          "aio write behind" = "yes";
+          
+          # Memory and locking optimizations
+          "kernel oplocks" = "no";
+          "level2 oplocks" = "yes";
+          oplocks = "yes";
+          "strict locking" = "no";
+          
+          # Connection management
+          deadtime = "15";
+          "max smbd processes" = "0";
+          
+          # Time Machine optimizations
+          "min receivefile size" = "16384";
+          "getwd cache" = "yes";
+          
+          # Logging (minimal for performance)
+          "log level" = "10";
+          "max log size" = "1000";
+          
+          # Case sensitivity optimization for large directories
+          "case sensitive" = "true";
+          "default case" = "lower";
+          "preserve case" = "no";
+          "short preserve case" = "no";
+          
+          # ZFS-specific optimizations
+          "strict allocate" = "no";
+        };
+      };
       shares = {
         storage = {
           path = "/storage";
@@ -672,7 +674,6 @@
   hardware.bluetooth.enable = true;
   
   # Enable sound with PipeWire
-  sound.enable = true;
   hardware.pulseaudio.enable = false;
   security.rtkit.enable = true;
   
