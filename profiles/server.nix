@@ -261,7 +261,7 @@
     # Terminal utilities
     kitty
     ghostty
-    konsole
+    kdePackages.konsole
     
     # Display manager
     greetd.tuigreet

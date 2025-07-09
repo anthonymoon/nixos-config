@@ -16,7 +16,7 @@
     # Terminal and shell
     kitty
     ghostty
-    konsole
+    kdePackages.konsole
     fish
     zsh
     bash-completion
