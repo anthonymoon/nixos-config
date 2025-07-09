@@ -16,16 +16,21 @@
         "xhci_pci"           # USB 3.0 controller
         "ahci"               # SATA AHCI controller
         "nvme"               # NVMe SSD support
+        "nvme_core"          # NVMe core support
+        "nvme_keyring"       # NVMe keyring support
         "usb_storage"        # USB storage devices
         "sd_mod"             # SCSI disk support
         "sr_mod"             # SCSI CD/DVD support
+        "sg"                 # SCSI generic driver
         "rtsx_pci_sdmmc"     # Realtek card readers
+        "uas"                # USB Attached SCSI
         
         # Virtio support (for VMs)
         "virtio_pci"         # Virtio PCI interface
         "virtio_blk"         # Virtio block devices
         "virtio_net"         # Virtio network
         "virtio_scsi"        # Virtio SCSI
+        "virtio_rng"         # Virtio random number generator
         
         # Device mapper and storage
         "dm_mod"             # Device mapper core
@@ -33,18 +38,73 @@
         "dm_crypt"           # Device mapper encryption
         "dm_raid"            # Device mapper RAID
         "dm_snapshot"        # Device mapper snapshots
+        "md_mod"             # MD RAID core
+        
+        # RAID support
+        "raid0"              # RAID 0 support
+        "raid1"              # RAID 1 support
+        "raid10"             # RAID 10 support
+        "raid456"            # RAID 4/5/6 support
         
         # Filesystems
         "btrfs"              # BTRFS filesystem
         "xfs"                # XFS filesystem
         "ext4"               # EXT4 filesystem
         "vfat"               # FAT32 (for EFI)
+        "fat"                # FAT filesystem
+        "exfat"              # exFAT filesystem
+        "zfs"                # ZFS filesystem
+        "spl"                # Solaris Porting Layer (for ZFS)
+        
+        # GPU and graphics
+        "amdgpu"             # AMD GPU driver
+        "nvidia"             # NVIDIA GPU driver
+        "nvidia_drm"         # NVIDIA DRM support
+        "nvidia_modeset"     # NVIDIA mode setting
+        "nvidia_uvm"         # NVIDIA unified memory
+        "qxl"                # QXL graphics (for VMs)
+        "drm_exec"           # DRM execution context
+        "drm_ttm_helper"     # DRM TTM helper
+        "ttm"                # TTM memory manager
         
         # Network and I/O
         "e1000e"             # Intel Ethernet
         "r8169"              # Realtek Ethernet
         "ixgbe"              # Intel 10GbE
         "thunderbolt"        # Thunderbolt support
+        "cfg80211"           # WiFi configuration
+        
+        # Input devices
+        "atkbd"              # AT keyboard
+        "i8042"              # PS/2 controller
+        "serio"              # Serial I/O
+        "psmouse"            # PS/2 mouse
+        "hid_generic"        # Generic HID
+        "usbhid"             # USB HID
+        "libps2"             # PS/2 library
+        
+        # I2C and system controllers
+        "i2c_i801"           # Intel I2C controller
+        "i2c_smbus"          # SMBus support
+        "lpc_ich"            # Intel LPC controller
+        "mei"                # Intel Management Engine
+        "mei_me"             # Intel ME interface
+        
+        # Power management and performance
+        "intel_rapl_common"  # Intel RAPL common
+        "intel_rapl_msr"     # Intel RAPL MSR
+        "intel_cstate"       # Intel C-states
+        "rapl"               # Running Average Power Limit
+        
+        # Cryptography
+        "aesni_intel"        # Intel AES-NI acceleration
+        "crypto_simd"        # SIMD crypto acceleration
+        "cryptd"             # Crypto daemon
+        
+        # QEMU and virtualization
+        "qemu_fw_cfg"        # QEMU firmware config
+        "kvm"                # KVM virtualization
+        "vfio"               # VFIO framework
         
         # Legacy and compatibility
         "ata_piix"           # Legacy ATA
@@ -86,7 +146,6 @@
       
       # Security (balanced with performance)
       "apparmor=1"                   # Enable AppArmor
-      "security=apparmor"            # Use AppArmor as LSM
       
       # Hardware compatibility
       "acpi_enforce_resources=lax"   # Relaxed ACPI for older hardware
@@ -132,8 +191,11 @@
     "ext4"               # Legacy compatibility
     "vfat"               # EFI boot partition
     "ntfs"               # Windows compatibility
-    "zfs"                # Enterprise filesystem (if enabled)
+    "zfs"                # Enterprise filesystem
   ];
+  
+  # ZFS configuration (requires host ID)
+  networking.hostId = "12345678";  # Required for ZFS - random but consistent
   
   # Hardware support configuration
   hardware = {
@@ -147,7 +209,7 @@
       enable32Bit = true;           # 32-bit support for gaming/Wine
       extraPackages = with pkgs; [
         # AMD
-        mesa.drivers
+        mesa
         amdvlk                      # AMD Vulkan driver
         
         # Intel
@@ -166,26 +228,26 @@
     cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     
     # Audio support
-    pulseaudio.enable = false;      # Use PipeWire instead
+    # pulseaudio.enable = false;      # Use PipeWire instead (configured in profiles)
   };
   
   # Advanced kernel tuning
   boot.kernel.sysctl = {
     # Network performance
-    "net.core.rmem_max" = 134217728;
-    "net.core.wmem_max" = 134217728;
-    "net.ipv4.tcp_rmem" = "4096 87380 134217728";
-    "net.ipv4.tcp_wmem" = "4096 65536 134217728";
-    "net.ipv4.tcp_congestion_control" = "bbr";
+    "net.core.rmem_max" = lib.mkDefault 134217728;
+    "net.core.wmem_max" = lib.mkDefault 134217728;
+    "net.ipv4.tcp_rmem" = lib.mkDefault "4096 87380 134217728";
+    "net.ipv4.tcp_wmem" = lib.mkDefault "4096 65536 134217728";
+    "net.ipv4.tcp_congestion_control" = lib.mkDefault "bbr";
     
     # Virtual memory tuning
-    "vm.swappiness" = 10;              # Reduce swap usage
-    "vm.dirty_ratio" = 15;
-    "vm.dirty_background_ratio" = 5;
-    "vm.vfs_cache_pressure" = 50;
+    "vm.swappiness" = lib.mkDefault 10;              # Reduce swap usage
+    "vm.dirty_ratio" = lib.mkDefault 15;
+    "vm.dirty_background_ratio" = lib.mkDefault 5;
+    "vm.vfs_cache_pressure" = lib.mkDefault 50;
     
     # Kernel performance
-    "kernel.sched_autogroup_enabled" = 0;  # Disable for server workloads
+    "kernel.sched_autogroup_enabled" = lib.mkDefault 0;  # Disable for server workloads
   };
   
   # Power management
@@ -194,6 +256,14 @@
     cpuFreqGovernor = lib.mkDefault "performance";  # Can be overridden per profile
   };
   
+  # Security configuration
+  security = {
+    apparmor = {
+      enable = true;
+      killUnconfinedConfinables = true;
+    };
+  };
+
   # Services for hardware support
   services = {
     # Firmware updates
@@ -225,7 +295,7 @@
     libvirtd = {
       enable = true;
       qemu = {
-        package = pkgs.qemu_full;
+        package = lib.mkDefault pkgs.qemu_full;
         runAsRoot = true;
         swtpm.enable = true;
         ovmf = {
