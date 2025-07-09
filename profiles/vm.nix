@@ -4,6 +4,7 @@
 {
   imports = [
     (modulesPath + "/profiles/qemu-guest.nix")
+    ../modules/display.nix
   ];
 
   # Filesystem configuration handled by Disko
@@ -21,7 +22,19 @@
   # VM optimizations
   services = {
     spice-vdagentd.enable = true;
-    qemuGuest.enable = true;
+    services.qemuGuest.enable = true;
+
+  # SSH configuration
+  services.openssh = {
+    enable = true;
+    settings = {
+      PermitRootLogin = "prohibit-password";
+      PasswordAuthentication = false;
+    };
+  };
+
+  # Firewall disabled
+  networking.firewall.enable = false;
   };
 
   # VM-specific packages
@@ -29,4 +42,24 @@
     spice-vdagent
     qemu-utils
   ];
+
+  users.users = {
+    root = {
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+    nixos = {
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+    amoon = {
+      isNormalUser = true;
+      extraGroups = [ "wheel" ];
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+  };
 }

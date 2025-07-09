@@ -39,6 +39,7 @@
           inherit system inputs;
           modules = [ ./modules/common.nix
             ./profiles/workstation.nix
+            self.nixosModules.display
             home-manager.nixosModules.home-manager
             disko.nixosModules.disko
             ./disko-config.nix
@@ -57,10 +58,14 @@
           inherit system inputs;
           modules = [ ./modules/common.nix
             ./profiles/iso.nix
+            ./modules/display.nix
             home-manager.nixosModules.home-manager
           ];
         };
       };
+
+      nixosModules.base = import ./profiles/base.nix;
+      nixosModules.display = import (builtins.path { path = ./modules; }) + "/display.nix";
 
       # Apps for building and installing
       apps.${system} = {
@@ -110,9 +115,11 @@
       diskoConfigurations.default = import ./disko-config.nix;
 
       # Expose configurations for easy access
-      packages.${system} = nixpkgs.lib.mapAttrs' (name: config: {
+      packages.${system} = (nixpkgs.lib.mapAttrs' (name: config: {
         name = "nixos-${name}";
         value = config.config.system.build.toplevel;
-      }) self.nixosConfigurations;
+      }) self.nixosConfigurations) // {
+        iso = self.nixosConfigurations.iso.config.system.build.isoImage;
+      };
     };
 }

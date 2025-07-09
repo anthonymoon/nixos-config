@@ -7,7 +7,7 @@
 {
   # Latest mainline kernel for maximum performance and hardware support
   boot = {
-    kernelPackages = pkgs.linuxPackages_latest;
+    kernelPackages = pkgs.linuxPackages_xanmod_latest;
     
     # Comprehensive kernel modules for all hardware types
     initrd = {
@@ -137,24 +137,38 @@
     
     # Kernel parameters for performance and compatibility
     kernelParams = [
-      # Performance optimizations
-      "mitigations=off"              # Disable CPU vulnerability mitigations for performance
-      "preempt=full"                 # Full preemption for responsiveness
+      # Core performance parameters
+      "selinux=0"
+      "cryptomgr.notests"
+      "elevator=none"
+      "fastboot"
+      "i40e.enable_sw_lldp=0"
+      "intel_iommu=on"
+      "iommu=pt"
+      "kvm_intel.nested=1"
+      "loglevel=3"
+      "mitigations=off"
+      "nowatchdog"
+      "nvidia-drm.modeset=1"
+      "nvme_core.default_ps_max_latency_us=0"
+      "pci=realloc=on"
+      "pcie_aspm=off"
+      "quiet"
+      "random.trust_cpu=on"
+      "rd.udev.log_level=3"
+      "rootflags=subvol=/@"
+      "rw"
+      "scsi_mod.use_blk_mq=1"
+      "splash"
+      "tsc=reliable"
       
-      # Memory management
-      "transparent_hugepage=madvise" # Smart hugepage usage
-      
-      # Security (balanced with performance)
-      "apparmor=1"                   # Enable AppArmor
-      
-      # Hardware compatibility
-      "acpi_enforce_resources=lax"   # Relaxed ACPI for older hardware
-      
-      # Virtualization support
-      "kvm_intel.nested=1"           # Enable nested virtualization
-      "kvm_amd.nested=1"             # Enable nested virtualization
-      "kvm.ignore_msrs=1"            # Ignore unhandled MSRs
-      "kvm.report_ignored_msrs=0"    # Don't spam logs with MSR warnings
+      # Additional parameters from original config
+      "threadirqs"
+      "cpufreq.default_governor=performance"
+      "transparent_hugepage=madvise"
+      "kvm_amd.nested=1"
+      "kvm.ignore_msrs=1"
+      "kvm.report_ignored_msrs=0"
     ];
     
     # Additional module packages
@@ -168,7 +182,7 @@
       systemd-boot = {
         enable = true;
         configurationLimit = 10;     # Keep last 10 generations
-        editor = false;              # Disable boot entry editing for security
+        editor = true;               # Enable boot entry editing
       };
       efi = {
         canTouchEfiVariables = true;
@@ -258,10 +272,6 @@
   
   # Security configuration
   security = {
-    apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
   };
 
   # Services for hardware support

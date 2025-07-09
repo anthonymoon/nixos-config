@@ -3,12 +3,8 @@
 
 {
   imports = [
-    ../modules/security.nix
     ../modules/media-server.nix
   ];
-  
-  # Enable security hardening by default for servers
-  modules.security.enable = true;
   # Media server is optional - enable with: modules.media-server.enable = true;
   
   # Filesystem configuration handled by Disko
@@ -24,8 +20,7 @@
   # No desktop environment
   services.xserver.enable = false;
   
-  # SSH configuration is handled by the security module
-  services.openssh.openFirewall = true;
+  # SSH configuration handled in common.nix
 
   # Essential server packages
   environment.systemPackages = with pkgs; [
@@ -75,9 +70,25 @@
     autoPrune.dates = "weekly";
   };
   # Add the user to docker group only if username is provided
-  users.users = lib.mkIf (username != null) {
-    ${username}.extraGroups = [ "docker" ];
-  };
+  users.users = {
+    root = {
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+    nixos = {
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+    amoon = {
+      isNormalUser = true;
+      extraGroups = [ "wheel" "docker" ]; # Add amoon to docker group
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+      ];
+    };
+  } // lib.mkIf (username != null) { ${username}.extraGroups = [ "docker" ]; };
 
   # Server performance optimizations
   boot.kernel.sysctl = {
@@ -95,8 +106,7 @@
   
   
   # Production-ready firewall configuration
-  # Firewall disabled per requirements
-  # networking.firewall configuration removed
+  networking.firewall.enable = false;
 
   # Server-specific directory setup
   systemd.tmpfiles.rules = [

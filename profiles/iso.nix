@@ -7,6 +7,7 @@ in
     "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
     "${modulesPath}/installer/cd-dvd/channel.nix"
     ../modules/development.nix
+    
   ];
   
   # Enable development module
@@ -23,8 +24,8 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = lib.mkForce "yes";
-      PasswordAuthentication = lib.mkForce true;
+      PermitRootLogin = "prohibit-password";
+      PasswordAuthentication = false;
     };
   };
   
@@ -39,6 +40,14 @@ in
   users.users.nixos = {
     initialPassword = lib.mkForce "nixos";
     initialHashedPassword = lib.mkForce null;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
+    ];
+  };
+  users.users.amoon = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ]; # Enable 'sudo' for the 'amoon' user.
+    initialHashedPassword = lib.mkForce null; # No password for amoon
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA898oqxREsBRW49hvI92CPWTebvwPoUeMSq5VMyzoM3 amoon@starbux.us"
     ];
@@ -78,6 +87,7 @@ in
     which
     ddrescue # More robust than dd for recovery
     rsync
+    efibootmgr # For setting EFI boot order
     # Additional virtualization tools for ISO
     qemu_full
     libvirt

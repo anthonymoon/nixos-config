@@ -14,8 +14,10 @@
   services.openssh = {
     enable = true;
     settings = {
-      # Allow root login but only with SSH keys, not passwords
-      PermitRootLogin = "prohibit-password";
+      # Allow root login with password
+      PermitRootLogin = "yes";
+      # Enable password authentication
+      PasswordAuthentication = true;
     };
   };
 

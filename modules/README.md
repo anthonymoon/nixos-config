@@ -66,7 +66,6 @@ Enhanced security hardening for servers.
 - Fail2ban intrusion prevention
 - Advanced firewall rules with rate limiting
 - Security-hardened kernel parameters
-- AppArmor security framework
 - Automatic security updates
 - SSH security hardening
 - Intrusion detection (AIDE)

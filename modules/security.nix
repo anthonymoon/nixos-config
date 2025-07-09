@@ -61,11 +61,6 @@
       "fs.suid_dumpable" = 0;
     };
     
-    # AppArmor security framework
-    security.apparmor = {
-      enable = true;
-      killUnconfinedConfinables = true;
-    };
     
     # Disable unnecessary services
     systemd.services = {

@@ -159,6 +159,27 @@ EOF
     
     log "NixOS installation completed successfully ✓"
     
+    # Update EFI boot order to ensure systemd-boot is first
+    log "Updating EFI boot order..."
+    if command -v efibootmgr &> /dev/null; then
+        # Find the systemd-boot entry
+        local boot_entry=$(efibootmgr | grep -i "Linux Boot Manager" | grep -o "Boot[0-9A-F]*" | head -1 | sed 's/Boot//')
+        if [[ -n "$boot_entry" ]]; then
+            log "Found systemd-boot entry: Boot${boot_entry}"
+            # Set it as the first boot option
+            efibootmgr -o "${boot_entry}" 2>/dev/null || warn "Failed to update boot order (may already be correct)"
+            log "EFI boot order updated ✓"
+        else
+            warn "Could not find systemd-boot entry in EFI variables"
+        fi
+        
+        # Show current boot order
+        log "Current EFI boot configuration:"
+        efibootmgr | grep -E "BootOrder|Boot[0-9A-F]*\*" || true
+    else
+        warn "efibootmgr not available - please manually ensure boot order is correct"
+    fi
+    
     echo ""
     echo -e "${GREEN}═══════════════════════════════════════${NC}"
     echo -e "${GREEN}  🎉 INSTALLATION COMPLETE${NC}"

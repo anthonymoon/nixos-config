@@ -5,6 +5,7 @@
   imports = [
     ../modules/gaming.nix
     ../modules/development.nix
+    
   ];
   
   # Enable gaming and development features by default for workstations
@@ -17,47 +18,6 @@
 
   # Platform settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  
-  # GPU support
-  services.xserver.videoDrivers = [ "modesetting" ];
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true;
-  };
-
-  # Desktop environment
-  services = {
-    xserver = {
-      enable = true;
-      xkb = {
-        layout = "us";
-        variant = "";
-      };
-    };
-
-    displayManager = {
-      sddm = {
-        enable = true;
-        wayland.enable = true;
-      };
-      autoLogin = lib.mkIf (username != null) {
-        enable = true;
-        user = username;
-      };
-      defaultSession = "plasma";
-    };
-
-    desktopManager.plasma6.enable = true;
-  };
-
-  # Audio
-  security.rtkit.enable = true;
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    alsa.support32Bit = true;
-    pulse.enable = true;
-  };
 
   # Desktop applications
   environment.systemPackages = with pkgs; [
@@ -87,10 +47,6 @@
 
   # Enable flatpak
   services.flatpak.enable = true;
-  xdg.portal = {
-    enable = true;
-    extraPortals = [ pkgs.kdePackages.xdg-desktop-portal-kde ];
-  };
 
   
 
