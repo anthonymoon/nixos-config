@@ -45,7 +45,7 @@
       networking = {
         networkmanager.enable = true;
         # firewall disabled in common.nix
-        useDHCP = lib.mkForce true;
+        useDHCP = lib.mkDefault true;
       };
 
       # Locale and timezone

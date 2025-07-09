@@ -7,6 +7,7 @@ in
     "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
     "${modulesPath}/installer/cd-dvd/channel.nix"
     ../modules/development.nix
+    
   ];
   
   # Enable development module
@@ -23,7 +24,7 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "yes";
+      PermitRootLogin = lib.mkForce "yes";
       PasswordAuthentication = true;
     };
   };
@@ -91,6 +92,8 @@ in
   
   # Enable QEMU guest agent for when ISO runs as VM
   services.qemuGuest.enable = true;
+
+  boot.kernel.sysctl."vm.overcommit_memory" = lib.mkForce "1";
   
   # Set GRUB boot timeout for faster boot
   boot.loader.timeout = lib.mkForce 3;

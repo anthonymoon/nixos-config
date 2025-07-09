@@ -27,6 +27,9 @@
       nodePackages.npm
       python312
       python312Packages.pip
+      (python312.withPackages (ps: with ps; [
+        chromadb
+      ]))
       # python312Packages.uvx - may need pipx instead
       rustc
       cargo
@@ -52,8 +55,8 @@
       wget
       httpie
       socat
-      gnu-netcat
-      telnet
+      netcat
+      
       nmap
       tcpdump
       
@@ -70,7 +73,7 @@
       jenkins
       
       # System tools
-      tuned
+      
       
       # Monitoring
       btop
@@ -85,7 +88,7 @@
       # Development utilities
       jq  # JSON processor
       yq  # YAML processor
-      jg  # JSON grep
+      
       tree
       fd  # Find alternative
       ripgrep  # grep alternative
@@ -166,50 +169,42 @@
     
     # Enable QEMU guest agent for VMs
     services.qemuGuest.enable = true;
+
     
-    # Enable tuned for performance optimization
-    services.tuned = {
-      enable = true;
-      recommendedProfile = "virtual-guest";
-    };
     
-    # Install ChromaDB via Python
-    environment.systemPackages = with pkgs; [
-      (python312.withPackages (ps: with ps; [
-        chromadb
-      ]))
-    ];
     
-    # Development shell configuration
-    programs.zsh = {
-      enable = true;
-      ohMyZsh = {
-        enable = true;
-        theme = "robbyrussell";
-        plugins = [ "git" "docker" "kubectl" "helm" ];
-      };
-      shellAliases = {
-        ll = "ls -la";
-        la = "ls -la";
-        ".." = "cd ..";
-        "..." = "cd ../..";
-        gs = "git status";
-        gc = "git commit";
-        gp = "git push";
-        gl = "git pull";
-        gd = "git diff";
-        docker-clean = "docker system prune -af";
-      };
-      initExtra = ''
-        # Initialize zoxide
-        eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
-        # Configure zinit if available
-        # source ${pkgs.zinit}/share/zinit/zinit.zsh
-      '';
-    };
+    
+    
+    
+    
     
     # Enable direnv for automatic environment loading
     programs.direnv.enable = true;
+
+    environment.etc."zshrc".text = ''
+      # Initialize zoxide
+      eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
+      # Configure zinit if available
+      # source ${pkgs.zinit}/share/zinit/zinit.zsh
+
+      # Oh My Zsh setup (manual)
+      # This assumes Oh My Zsh is installed globally or for the user
+      # If not, you might need to install it first
+      # export ZSH="/usr/share/oh-my-zsh"
+      # source $ZSH/oh-my-zsh.sh
+
+      # Shell Aliases
+      alias ll="ls -la"
+      alias la="ls -la"
+      alias ..="cd .."
+      alias ...="cd ../.."
+      alias gs="git status"
+      alias gc="git commit"
+      alias gp="git push"
+      alias gl="git pull"
+      alias gd="git diff"
+      alias docker-clean="docker system prune -af"
+    '';
     
     # Firewall disabled per requirements
     # Port configurations removed

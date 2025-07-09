@@ -25,86 +25,13 @@
       inherit lib;
 
       # Define NixOS configurations using the helper function
-      nixosConfigurations = {
-        vm = lib.mkSystem {
-          inherit system inputs;
-          modules = [ ./modules/common.nix
-            ./profiles/vm.nix
-            home-manager.nixosModules.home-manager
-            disko.nixosModules.disko
-            ./disko-config.nix
-          ];
-        };
-        workstation = lib.mkSystem {
-          inherit system inputs;
-          modules = [ ./modules/common.nix
-            ./profiles/workstation.nix
-            home-manager.nixosModules.home-manager
-            disko.nixosModules.disko
-            ./disko-config.nix
-          ];
-        };
-        server = lib.mkSystem {
-          inherit system inputs;
-          modules = [ ./modules/common.nix
-            ./profiles/server.nix
-            home-manager.nixosModules.home-manager
-            disko.nixosModules.disko
-            ./disko-config.nix
-          ];
-        };
-        iso = lib.mkSystem {
-          inherit system inputs;
-          modules = [ ./modules/common.nix
-            ./profiles/iso.nix
-            home-manager.nixosModules.home-manager
-          ];
-        };
-      };
+      nixosConfigurations = import ./core/nixos-configurations { inherit lib system inputs; };
 
       # Apps for building and installing
-      apps.${system} = {
-        install = {
-          type = "app";
-          meta.description = "Interactive NixOS installer script with flake-based configuration";
-          program = toString (nixpkgs.legacyPackages.${system}.writeShellScript "install" ''
-            export NIXOS_CONFIG_FLAKE="github:anthonymoon/nixos-config"
-            exec ${./install/install.sh} "$@"
-          '');
-        };
-
-        disko = {
-          type = "app";
-          meta.description = "Declarative disk partitioning and formatting tool";
-          program = "${disko.packages.${system}.default}/bin/disko";
-        };
-
-        build-iso = {
-          type = "app";
-          meta.description = "Build custom NixOS ISO with SSH access and installation tools";
-          program = "${self.nixosConfigurations.iso.config.system.build.isoImage}/bin/nixos-iso";
-        };
-      };
+      apps.${system} = import ./core/apps.nix { inherit self system nixpkgs inputs; };
 
       # Development shell for testing
-      devShells.${system}.default = nixpkgs.legacyPackages.${system}.mkShell {
-        buildInputs = with nixpkgs.legacyPackages.${system}; [
-          git
-          nixos-rebuild
-          nix-tree
-          disko.packages.${system}.default
-        ];
-
-        shellHook = ''
-          echo "🚀 NixOS Config Development Shell"
-          echo "Available configurations: vm, workstation, server"
-          echo ""
-          echo "Commands:"
-          echo "  nix run .#install <config>     - Install NixOS configuration"
-          echo "  nix run .#build-iso           - Build custom ISO with SSH access"
-          echo ""
-        '';
-      };
+      devShells.${system}.default = import ./core/shell.nix { inherit system nixpkgs inputs; };
 
       # Disko configuration for disk partitioning
       diskoConfigurations.default = import ./disko-config.nix;
