@@ -909,16 +909,16 @@
   };
   
   # NSS configuration matching current system
-  system.nssModules = with pkgs; [ nss-mdns ];
-  system.nssDatabases = {
-    passwd = [ "files" "systemd" ];
-    group = [ "files" "systemd" ];
-    shadow = [ "files" "systemd" ];
-    hosts = [ "mymachines" "resolve" "files" "myhostname" "dns" ];
-    networks = [ "files" ];
-    protocols = [ "files" ];
-    services = [ "files" ];
-  };
+  # system.nssModules = with pkgs; [ nss-mdns ];
+  # system.nssDatabases = {
+  #   passwd = [ "files" "systemd" ];
+  #   group = [ "files" "systemd" ];
+  #   shadow = [ "files" "systemd" ];
+  #   hosts = [ "mymachines" "resolve" "files" "myhostname" "dns" ];
+  #   networks = [ "files" ];
+  #   protocols = [ "files" ];
+  #   services = [ "files" ];
+  # };
 
   # Server-specific directory setup
   systemd.tmpfiles.rules = [
