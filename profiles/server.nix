@@ -489,10 +489,12 @@
       '';
     };
     
-    # Redis-compatible database
-    valkey = {
-      enable = true;
-      port = 6379;
+    # Redis database
+    redis = {
+      servers."" = {
+        enable = true;
+        port = 6379;
+      };
     };
     
     
