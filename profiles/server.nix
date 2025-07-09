@@ -67,15 +67,13 @@
     loader = {
       grub = {
         enable = true;
-        version = 2;
-        theme = null; # Will use default theme instead of CachyOS theme
-        configFile = null; # Use NixOS generated config
+        device = "/dev/sda"; # Adjust this for your system
+        useOSProber = true;
         extraConfig = ''
           GRUB_TERMINAL_INPUT=console
           GRUB_GFXMODE=auto
           GRUB_GFXPAYLOAD_LINUX=keep
           GRUB_DISABLE_RECOVERY=true
-          GRUB_DISABLE_OS_PROBER=false
         '';
       };
       timeout = 5;
@@ -284,7 +282,7 @@
     cargo
     
     # System backup
-    timeshift
+    # timeshift
     
     # Shell enhancements
     zoxide
@@ -296,10 +294,10 @@
     dpkg
     
     # System tuning
-    tuned
+    # tuned
     
     # Network management
-    networkmanager
+    # networkmanager
     
     # DNS tools
     dnsutils
@@ -499,10 +497,10 @@
     
     
     # System tuning
-    tuned = {
-      enable = true;
-      profile = "server";
-    };
+    # tuned = {
+    #   enable = true;
+    #   profile = "server";
+    # };
     
     
     # Bluetooth support
@@ -522,11 +520,11 @@
     timesyncd.enable = true;
     
     # System backup (timeshift) - configured but not scheduled
-    timeshift = {
-      enable = true;
-      # Match current configuration - no automatic scheduling
-      autosnap = false;
-    };
+    # timeshift = {
+    #   enable = true;
+    #   # Match current configuration - no automatic scheduling
+    #   autosnap = false;
+    # };
     
     # Log rotation
     logrotate.enable = true;
