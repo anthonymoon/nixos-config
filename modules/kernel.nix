@@ -58,10 +58,7 @@
         
         # GPU and graphics
         "amdgpu"             # AMD GPU driver
-        "nvidia"             # NVIDIA GPU driver
-        "nvidia_drm"         # NVIDIA DRM support
-        "nvidia_modeset"     # NVIDIA mode setting
-        "nvidia_uvm"         # NVIDIA unified memory
+        # NVIDIA drivers removed - should be loaded only when hardware is present
         "qxl"                # QXL graphics (for VMs)
         "drm_exec"           # DRM execution context
         "drm_ttm_helper"     # DRM TTM helper
@@ -149,7 +146,7 @@
       "loglevel=3"
       "mitigations=off"
       "nowatchdog"
-      "nvidia-drm.modeset=1"
+      # nvidia-drm.modeset=1 removed - only needed when NVIDIA hardware is present
       "nvme_core.default_ps_max_latency_us=0"
       "pci=realloc=on"
       "pcie_aspm=off"
