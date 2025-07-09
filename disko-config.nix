@@ -1,69 +1,62 @@
-# Disko configuration for automatic disk detection and BTRFS setup
+# Disko configuration for BTRFS setup with proper boot support
 # This configuration will be imported by NixOS modules
 {
   disko.devices = {
     disk = {
       main = {
         type = "disk";
-        # Use a script to auto-detect the primary disk at runtime
-        # This will be the first available disk that's not a CD-ROM
-        device = builtins.head (
-          builtins.filter (dev: builtins.pathExists dev) [
-            "/dev/vda"      # QEMU/KVM virtual disk (most common)
-            "/dev/sda"      # SATA/SCSI disk  
-            "/dev/nvme0n1"  # NVMe disk
-            "/dev/xvda"     # Xen virtual disk
-            "/dev/hda"      # IDE disk (legacy)
-          ]
-        );
+        device = "/dev/disk/by-diskseq/1";
         content = {
           type = "gpt";
           partitions = {
             # EFI System Partition for UEFI boot
-            boot = {
-              size = "1G";
+            ESP = {
+              priority = 1;
+              name = "ESP";
+              start = "1M";
+              end = "512M";
               type = "EF00";
               content = {
                 type = "filesystem";
                 format = "vfat";
                 mountpoint = "/boot";
-                mountOptions = [ "defaults" "umask=0077" ];
+                mountOptions = [ "umask=0077" ];
               };
             };
 
-            # The main BTRFS partition for the system.
+            # The main BTRFS partition for the system
             root = {
               size = "100%";
               content = {
                 type = "btrfs";
                 extraArgs = [ "-f" ]; # Force creation, useful for re-running disko
                 subvolumes = {
-                  # Subvolume for the root filesystem.
-                  "@" = {
+                  # Subvolume for the root filesystem
+                  "/rootfs" = {
                     mountpoint = "/";
-                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
 
-                  # Subvolume for home directories.
-                  "@home" = {
+                  # Subvolume for home directories
+                  "/home" = {
                     mountpoint = "/home";
-                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
 
-                  # Subvolume for the Nix store.
-                  "@nix" = {
+                  # Subvolume for the Nix store
+                  "/nix" = {
                     mountpoint = "/nix";
-                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
 
-                  # Subvolume for logs.
-                  "@log" = {
+                  # Subvolume for logs
+                  "/var/log" = {
                     mountpoint = "/var/log";
-                    mountOptions = [ "compress=zstd" "noatime" "nodiratime" ];
+                    mountOptions = [ "compress=zstd" "noatime" ];
                   };
 
-                  # A dedicated subvolume for snapshots.
-                  "@snapshots" = {
+                  # A dedicated subvolume for snapshots
+                  "/snapshots" = {
                     mountpoint = "/.snapshots";
                   };
                 };
