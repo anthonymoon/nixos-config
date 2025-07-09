@@ -90,7 +90,7 @@
     # Enhanced SSH security - only when security module is enabled
     services.openssh.settings = {
       PasswordAuthentication = lib.mkForce false;
-      PermitRootLogin = "no";
+      PermitRootLogin = lib.mkForce "no";
       X11Forwarding = false;
       MaxAuthTries = 3;
       ClientAliveInterval = 300;
