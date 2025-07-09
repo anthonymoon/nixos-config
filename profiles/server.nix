@@ -11,25 +11,15 @@
   modules.security.enable = true;
   # Media server is optional - enable with: modules.media-server.enable = true;
   
-  # Hardware support - generic UEFI system
-  boot = {
-    # Hardened kernel for security-focused server deployments
-    kernelPackages = pkgs.linuxKernel.packages.linux_hardened;
-    
-    initrd = {
-      availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-      kernelModules = [ ];
-    };
-    kernelModules = [ "kvm-intel" ];
-    extraModulePackages = [ ];
-  };
-
   # Filesystem configuration handled by Disko
   # No swap devices - using ZRAM from base profile
+  # Hardware configuration handled by universal kernel module
 
-  # Hardware settings
+  # Platform settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  
+  # Server-specific kernel tuning (override defaults from kernel module)
+  powerManagement.cpuFreqGovernor = lib.mkForce "performance";
 
   # No desktop environment
   services.xserver.enable = false;

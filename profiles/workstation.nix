@@ -11,26 +11,12 @@
   modules.gaming.enable = true;
   modules.development.enable = true;
   
-  # Hardware support - generic UEFI system
-  boot = {
-    # Zen kernel for gaming and desktop performance optimization
-    kernelPackages = pkgs.linuxKernel.packages.linux_zen;
-    
-    initrd = {
-      availableKernelModules = [ "xhci_pci" "thunderbolt" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
-      kernelModules = [ ];
-    };
-    kernelModules = [ "kvm-amd" "kvm-intel" ];
-    extraModulePackages = [ ];
-  };
-
   # Filesystem configuration handled by Disko
   # No swap devices - using ZRAM from base profile
+  # Hardware configuration handled by universal kernel module
 
-  # Hardware settings
+  # Platform settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-  hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
   
   # GPU support
   services.xserver.videoDrivers = [ "modesetting" ];

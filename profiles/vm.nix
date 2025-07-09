@@ -6,25 +6,17 @@
     (modulesPath + "/profiles/qemu-guest.nix")
   ];
 
-  # VM-specific boot modules
-  boot = {
-    # LTS kernel for VM stability and mature virtio support
-    kernelPackages = pkgs.linuxKernel.packages.linux_6_6;
-    
-    initrd = {
-      availableKernelModules = [ "ahci" "xhci_pci" "virtio_pci" "sr_mod" "virtio_blk" ];
-      kernelModules = [ ];
-    };
-    kernelModules = [ ];
-    extraModulePackages = [ ];
-  };
-
   # Filesystem configuration handled by Disko
   # No swap devices - using ZRAM from base profile
+  # Hardware configuration handled by universal kernel module
 
   # VM hardware settings
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  
+  # VM-specific optimizations (override kernel module defaults)
+  powerManagement.cpuFreqGovernor = lib.mkForce "ondemand";
   hardware.cpu.intel.updateMicrocode = false; # Not needed in VMs
+  hardware.cpu.amd.updateMicrocode = false; # Not needed in VMs
   
   # VM optimizations
   services = {

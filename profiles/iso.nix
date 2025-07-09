@@ -23,8 +23,8 @@ in
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
+      PermitRootLogin = lib.mkForce "yes";
+      PasswordAuthentication = lib.mkForce true;
     };
   };
   
@@ -51,7 +51,7 @@ in
     # Enable NetworkManager for easier network configuration
     networkmanager.enable = true;
     # Let NetworkManager handle DHCP
-    useDHCP = lib.mkForce false;
+    useDHCP = lib.mkDefault false;
     useNetworkd = false;
   };
   
@@ -86,8 +86,7 @@ in
     spice-vdagent
   ] ++ extraPackages;
   
-  # Load KVM modules
-  boot.kernelModules = [ "kvm-intel" "kvm-amd" ];
+  # KVM modules loaded by kernel module in base profiles
   
   # Enable QEMU guest agent for when ISO runs as VM
   services.qemuGuest.enable = true;

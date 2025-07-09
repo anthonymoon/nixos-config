@@ -9,37 +9,14 @@
 }:
 
 {
-  # No user configuration import needed - users defined here
+  imports = [
+    ../modules/kernel.nix
+  ];
 
   # This configuration is applied only when a username is provided.
   config = lib.mkMerge [
     # Always include base configuration
     {
-      # Boot configuration - works everywhere
-      boot = {
-        loader = {
-          systemd-boot = {
-            enable = true;
-            configurationLimit = 10;
-          };
-          efi.canTouchEfiVariables = true;
-        };
-        
-        # Essential kernel modules
-        initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" ];
-        kernelModules = [ ];
-        
-        # Safe kernel parameters
-        kernelParams = [ 
-          "quiet" 
-          "loglevel=3"
-          # Enable nested virtualization
-          "kvm_intel.nested=1"
-          "kvm_amd.nested=1"
-          "kvm.ignore_msrs=1"
-          "kvm.report_ignored_msrs=0"
-        ];
-      };
 
       # Networking - basic and reliable
       networking = {
