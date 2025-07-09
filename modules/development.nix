@@ -23,7 +23,7 @@
       # gemini - needs custom package
       
       # Programming languages
-      nodejs_22
+      nodejs_24
       nodePackages.npm
       python312
       python312Packages.pip
@@ -52,8 +52,8 @@
       wget
       httpie
       socat
-      gnu-netcat
-      telnet
+      netcat-gnu
+      inetutils
       nmap
       tcpdump
       
@@ -70,7 +70,7 @@
       jenkins
       
       # System tools
-      tuned
+      # tuned
       
       # Monitoring
       btop
@@ -85,7 +85,7 @@
       # Development utilities
       jq  # JSON processor
       yq  # YAML processor
-      jg  # JSON grep
+      # jg  # JSON grep - package not available
       tree
       fd  # Find alternative
       ripgrep  # grep alternative
@@ -97,6 +97,11 @@
       
       # VS Code Server support
       # vscode-server - needs special handling
+      
+      # ChromaDB via Python
+      (python312.withPackages (ps: with ps; [
+        chromadb
+      ]))
     ];
     
     
@@ -168,17 +173,11 @@
     services.qemuGuest.enable = true;
     
     # Enable tuned for performance optimization
-    services.tuned = {
-      enable = true;
-      recommendedProfile = "virtual-guest";
-    };
+    # services.tuned = {
+    #   enable = true;
+    #   recommendedProfile = "virtual-guest";
+    # };
     
-    # Install ChromaDB via Python
-    environment.systemPackages = with pkgs; [
-      (python312.withPackages (ps: with ps; [
-        chromadb
-      ]))
-    ];
     
     # Development shell configuration
     programs.zsh = {
@@ -200,7 +199,7 @@
         gd = "git diff";
         docker-clean = "docker system prune -af";
       };
-      initExtra = ''
+      interactiveShellInit = ''
         # Initialize zoxide
         eval "$(${pkgs.zoxide}/bin/zoxide init zsh)"
         # Configure zinit if available
