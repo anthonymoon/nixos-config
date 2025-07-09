@@ -912,16 +912,12 @@
   system.nssModules = with pkgs; [ nss-mdns ];
   system.nssDatabases = {
     passwd = [ "files" "systemd" ];
-    group = [ "files" "[SUCCESS=merge]" "systemd" ];
+    group = [ "files" "systemd" ];
     shadow = [ "files" "systemd" ];
-    gshadow = [ "files" "systemd" ];
-    hosts = [ "mymachines" "resolve" "[!UNAVAIL=return]" "files" "myhostname" "dns" ];
+    hosts = [ "mymachines" "resolve" "files" "myhostname" "dns" ];
     networks = [ "files" ];
     protocols = [ "files" ];
     services = [ "files" ];
-    ethers = [ "files" ];
-    rpc = [ "files" ];
-    netgroup = [ "files" ];
   };
 
   # Server-specific directory setup
