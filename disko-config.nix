@@ -26,6 +26,7 @@
 
             # The main BTRFS partition for the system
             root = {
+              name = "disk-main-root";
               size = "100%";
               content = {
                 type = "btrfs";
